@@ -1,0 +1,1127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>MandaMaster</title>
+<style>
+:root{
+  --ink:#1c1917;
+  --paper:#faf6ee;
+  --seal:#c1272d;
+  --seal-dark:#9a1f24;
+  --jade:#2f6b4f;
+  --jade-light:#e8f2ec;
+  --gold:#c99a3f;
+  --line:#e4dcc8;
+  --muted:#8a8171;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{
+  margin:0;
+  background:var(--paper);
+  background-image:
+    radial-gradient(circle at 10% 10%, rgba(193,39,45,0.04), transparent 40%),
+    radial-gradient(circle at 90% 85%, rgba(47,107,79,0.05), transparent 40%);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  color:var(--ink);
+  min-height:100vh;
+  padding:16px;
+}
+.wrap{max-width:640px;margin:0 auto;}
+.top{
+  display:flex;align-items:baseline;justify-content:space-between;
+  margin-bottom:14px;
+}
+.brand{
+  font-size:22px;font-weight:800;letter-spacing:-0.01em;
+  display:flex;align-items:center;gap:8px;
+}
+.brand .seal{
+  width:26px;height:26px;border-radius:6px;background:transparent;
+  color:#fff;display:flex;align-items:center;justify-content:center;
+  font-size:20px;font-weight:900;flex-shrink:0;
+}
+.stat{font-size:12px;color:var(--muted);font-weight:600;text-align:right;}
+.stat b{color:var(--jade);}
+
+.tabs{
+  display:flex;flex-wrap:wrap;gap:6px;background:#fff;border:1px solid var(--line);
+  border-radius:12px;padding:4px;margin-bottom:16px;
+}
+.tab{
+  flex:1 1 auto;min-width:70px;text-align:center;padding:9px 4px;border-radius:9px;
+  font-size:12.5px;font-weight:700;color:var(--muted);cursor:pointer;
+  border:none;background:transparent;transition:all .15s;
+}
+.tab.active{background:var(--ink);color:#fff;}
+
+.deckbar{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:12px;font-size:13px;color:var(--muted);font-weight:600;
+}
+.deckbar select{
+  font-family:inherit;font-size:13px;font-weight:700;color:var(--ink);
+  background:#fff;border:1px solid var(--line);border-radius:8px;padding:6px 8px;
+}
+
+.panel{display:none;}
+.panel.active{display:block;}
+
+/* FLASHCARD */
+.card-stage{
+  perspective:1200px;height:280px;margin-bottom:16px;
+}
+.card{
+  width:100%;height:100%;position:relative;transform-style:preserve-3d;
+  transition:transform .45s cubic-bezier(.2,.8,.2,1);cursor:pointer;
+}
+.card.flipped{transform:rotateY(180deg);}
+.face{
+  position:absolute;inset:0;backface-visibility:hidden;
+  border-radius:20px;border:1px solid var(--line);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:24px;text-align:center;background:#fff;
+  box-shadow:0 1px 2px rgba(0,0,0,.04), 0 8px 24px rgba(0,0,0,.05);
+}
+.face.front{
+  background:
+    linear-gradient(135deg, #fff 0%, var(--jade-light) 140%);
+}
+.hanzi{font-size:76px;font-weight:700;line-height:1;margin-bottom:10px;}
+.pinyin-lg{font-size:22px;color:var(--seal);font-weight:700;}
+.hint{position:absolute;bottom:14px;font-size:11px;color:var(--muted);font-weight:600;}
+.face.back{transform:rotateY(180deg);background:var(--ink);color:#fff;}
+.face.back .hanzi{font-size:44px;color:var(--gold);margin-bottom:14px;}
+.face.back .pinyin-lg{color:#fff;opacity:.85;margin-bottom:10px;}
+.trans-lg{font-size:19px;font-weight:600;line-height:1.35;}
+.pos-tag{
+  margin-top:12px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;
+  background:rgba(255,255,255,.12);padding:4px 10px;border-radius:20px;font-weight:700;
+}
+
+.btnrow{display:flex;gap:10px;}
+.btn{
+  flex:1;border:none;border-radius:14px;padding:15px 10px;font-size:15px;
+  font-weight:800;cursor:pointer;transition:transform .1s;font-family:inherit;
+}
+.btn:active{transform:scale(.96);}
+.btn-no{background:#fdecec;color:var(--seal-dark);}
+.btn-yes{background:var(--jade-light);color:var(--jade);}
+.btn-primary{background:var(--ink);color:#fff;}
+.navrow{display:flex;justify-content:space-between;align-items:center;margin-top:14px;}
+.iconbtn{
+  border:1px solid var(--line);background:#fff;border-radius:10px;
+  width:40px;height:40px;font-size:16px;cursor:pointer;color:var(--ink);
+}
+.progressline{
+  height:5px;background:var(--line);border-radius:4px;overflow:hidden;flex:1;margin:0 12px;
+}
+.progressfill{height:100%;background:var(--jade);border-radius:4px;transition:width .3s;}
+
+/* QUIZ */
+.qcard{
+  background:#fff;border:1px solid var(--line);border-radius:20px;
+  padding:28px 22px;text-align:center;margin-bottom:16px;
+  box-shadow:0 1px 2px rgba(0,0,0,.04), 0 8px 24px rgba(0,0,0,.05);
+}
+.qlabel{font-size:12px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;}
+.qhanzi{font-size:64px;font-weight:700;margin-bottom:4px;}
+.qpinyin{font-size:18px;color:var(--seal);font-weight:700;}
+.options{display:flex;flex-direction:column;gap:10px;}
+.opt{
+  text-align:left;background:#fff;border:2px solid var(--line);border-radius:14px;
+  padding:15px 16px;font-size:15.5px;font-weight:600;cursor:pointer;font-family:inherit;
+  transition:all .12s;color:var(--ink);
+}
+.opt:active{transform:scale(.98);}
+.opt.correct{border-color:var(--jade);background:var(--jade-light);color:var(--jade);}
+.opt.wrong{border-color:var(--seal);background:#fdecec;color:var(--seal-dark);}
+.opt.dim{opacity:.45;}
+.streakbar{
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  font-size:13px;font-weight:700;color:var(--gold);margin-bottom:12px;
+}
+
+/* MATCH */
+.matchgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.mtile{
+  background:#fff;border:2px solid var(--line);border-radius:12px;
+  padding:14px 10px;text-align:center;cursor:pointer;font-family:inherit;
+  min-height:64px;display:flex;align-items:center;justify-content:center;
+  transition:all .12s;
+}
+.mtile .h{font-size:24px;font-weight:700;}
+.mtile .t{font-size:13px;font-weight:600;line-height:1.3;}
+.mtile.sel{border-color:var(--gold);background:#fdf6e6;}
+.mtile.done{border-color:var(--jade);background:var(--jade-light);opacity:.5;pointer-events:none;}
+.mtile.bad{border-color:var(--seal);background:#fdecec;}
+
+.donebox{
+  background:#fff;border:1px solid var(--line);border-radius:20px;padding:30px 22px;
+  text-align:center;
+}
+.donebox .big{font-size:40px;font-weight:800;color:var(--jade);margin-bottom:6px;}
+
+.empty{text-align:center;padding:40px 20px;color:var(--muted);font-size:14px;}
+
+.typeinput{
+  width:100%;font-family:inherit;font-size:20px;font-weight:700;text-align:center;
+  padding:16px;border-radius:14px;border:2px solid var(--line);background:#fff;
+  color:var(--ink);
+}
+.typeinput:focus{outline:none;border-color:var(--gold);}
+.typeinput.correct{border-color:var(--jade);background:var(--jade-light);color:var(--jade);}
+.typeinput.wrong{border-color:var(--seal);background:#fdecec;color:var(--seal-dark);}
+.typefeedback{text-align:center;margin-top:12px;font-size:14px;font-weight:600;color:var(--muted);min-height:20px;}
+.typefeedback b{color:var(--ink);}
+.btn-secondary{background:#fdf6e6;color:var(--gold);flex:0 0 auto;padding-left:16px;padding-right:16px;}
+.cathint{
+  margin-top:10px;font-size:12px;font-weight:700;color:var(--gold);
+  background:#fdf6e6;display:inline-block;padding:5px 12px;border-radius:20px;
+  min-height:14px;opacity:0;transition:opacity .15s;
+}
+.cathint.show{opacity:1;}
+
+.sentenceinput{
+  width:100%;font-family:inherit;font-size:16px;font-weight:500;
+  padding:14px;border-radius:14px;border:2px solid var(--line);background:#fff;
+  color:var(--ink);resize:none;line-height:1.4;
+}
+.sentenceinput:focus{outline:none;border-color:var(--gold);}
+.examplebox{
+  display:none;margin-top:14px;padding:16px 18px;border-radius:14px;
+  background:var(--jade-light);border:1px solid var(--jade);
+}
+.examplebox.show{display:block;}
+.examplebox .exlabel{font-size:11px;text-transform:uppercase;letter-spacing:.06em;font-weight:800;color:var(--jade);margin-bottom:6px;}
+.examplebox .expinyin{font-size:17px;font-weight:700;color:var(--ink);margin-bottom:4px;}
+.examplebox .extrans{font-size:14px;color:var(--muted);font-weight:600;}
+
+.scenariogrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.scenariocard{
+  background:#fff;border:2px solid var(--line);border-radius:14px;padding:16px 12px;
+  text-align:center;cursor:pointer;font-family:inherit;transition:all .12s;
+}
+.scenariocard:active{transform:scale(.97);}
+.scenariocard .emoji{font-size:32px;margin-bottom:8px;}
+.scenariocard .name{font-size:14px;font-weight:800;color:var(--ink);}
+.scenariocard .desc{font-size:11px;color:var(--muted);font-weight:600;margin-top:2px;}
+
+.chatmessages{
+  display:flex;flex-direction:column;gap:10px;max-height:420px;overflow-y:auto;
+  padding:4px 2px;
+}
+.bubble{max-width:82%;padding:11px 14px;border-radius:16px;font-size:14.5px;line-height:1.45;}
+.bubble.them{align-self:flex-start;background:#fff;border:1px solid var(--line);border-bottom-left-radius:4px;}
+.bubble.me{align-self:flex-end;background:var(--jade);color:#fff;border-bottom-right-radius:4px;}
+.bubble .zh{font-weight:700;margin-bottom:2px;}
+.bubble .py{font-size:12px;opacity:.8;margin-bottom:4px;}
+.bubble .en{font-size:12.5px;opacity:.75;font-style:italic;}
+.bubble.me .py, .bubble.me .en{opacity:.85;}
+.typingdots{align-self:flex-start;color:var(--muted);font-size:13px;font-weight:600;padding:4px 10px;}
+
+.patterncard{
+  background:#fff;border:1px solid var(--line);border-radius:16px;
+  padding:16px 18px;margin-bottom:12px;
+}
+.patterncard .pname{font-size:13px;font-weight:800;color:var(--seal);margin-bottom:4px;}
+.patterncard .pstruct{font-size:17px;font-weight:700;margin-bottom:8px;}
+.patterncard .pex{font-size:14.5px;font-weight:600;margin-bottom:2px;}
+.patterncard .pen{font-size:13px;color:var(--muted);font-weight:600;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="top">
+    <div class="brand"><span class="seal">🍊</span>MandaMaster</div>
+    <div class="stat">Known: <b id="knownCount">0</b>/310 · Missed: <b id="missedCount">0</b></div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" data-panel="flash">Flashcards</button>
+    <button class="tab" data-panel="quiz">Quiz</button>
+    <button class="tab" data-panel="match">Match</button>
+    <button class="tab" data-panel="type">Type</button>
+    <button class="tab" data-panel="sentence">Sentence</button>
+    <button class="tab" data-panel="mw">M-Words</button>
+    <button class="tab" data-panel="patterns">Patterns</button>
+    <button class="tab" data-panel="chat">Chat</button>
+  </div>
+
+  <div class="deckbar">
+    <span id="deckLabel">Deck: All 310</span>
+    <select id="deckSelect">
+      <option value="all">All 310</option>
+      <option value="new">Not yet known</option>
+      <option value="missed">Missed / got wrong</option>
+      <option value="words">Single words only</option>
+      <option value="phrases">Phrases & short sentences</option>
+      <option value="hsk-old">Old HSK1 Words</option>
+      <option value="hsk-new">New HSK1 Words</option>
+      <option value="hsk-other">Other Words</option>
+      <option value="slang">Slang</option>
+    </select>
+  </div>
+
+  <!-- FLASHCARDS -->
+  <div class="panel active" id="panel-flash">
+    <div class="card-stage">
+      <div class="card" id="card">
+        <div class="face front">
+          <div class="hanzi" id="fHanzi"></div>
+          <div class="hint">tap to flip</div>
+        </div>
+        <div class="face back">
+          <div class="hanzi" id="bHanzi"></div>
+          <div class="pinyin-lg" id="bPinyin"></div>
+          <div class="trans-lg" id="bTrans"></div>
+          <div class="pos-tag" id="bPos"></div>
+        </div>
+      </div>
+    </div>
+    <div class="btnrow">
+      <button class="btn btn-no" id="dontKnow">Still learning</button>
+      <button class="btn btn-yes" id="know">I know it</button>
+    </div>
+    <div class="navrow">
+      <button class="iconbtn" id="prevCard">‹</button>
+      <div class="progressline"><div class="progressfill" id="flashProgress"></div></div>
+      <button class="iconbtn" id="nextCard">›</button>
+    </div>
+  </div>
+
+  <!-- QUIZ -->
+  <div class="panel" id="panel-quiz">
+    <div class="streakbar">🔥 Streak: <span id="streakNum">0</span></div>
+    <div class="qcard">
+      <div class="qlabel" id="qDirLabel">What does this mean?</div>
+      <div class="qhanzi" id="qHanzi"></div>
+      <div class="qpinyin" id="qPinyin"></div>
+    </div>
+    <div class="options" id="qOptions"></div>
+    <div id="quizExplain" class="examplebox"></div>
+    <div class="btnrow" id="quizNextRow" style="margin-top:12px;display:none;">
+      <button class="btn btn-primary" id="quizNextBtn">Next →</button>
+    </div>
+  </div>
+
+  <!-- MATCH -->
+  <div class="panel" id="panel-match">
+    <div class="deckbar" style="margin-bottom:10px;">
+      <span id="matchStatus">Match each character to its meaning</span>
+      <span id="matchScore" style="color:var(--jade);font-weight:800;"></span>
+    </div>
+    <div class="matchgrid" id="matchGrid"></div>
+  </div>
+
+  <!-- TYPE -->
+  <div class="panel" id="panel-type">
+    <div class="streakbar">🔥 Streak: <span id="typeStreakNum">0</span></div>
+    <div class="qcard">
+      <div class="qlabel" id="typeDirLabel">Type the pinyin</div>
+      <div class="qhanzi" id="tHanzi"></div>
+      <div class="cathint" id="typeCatHint"></div>
+    </div>
+    <input type="text" id="typeInput" class="typeinput" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="type here…">
+    <div class="btnrow" style="margin-top:12px;">
+      <button class="btn btn-secondary" id="typeHintBtn">💡 Hint</button>
+      <button class="btn btn-primary" id="typeSubmit">Check</button>
+    </div>
+    <div id="typeFeedback" class="typefeedback"></div>
+  </div>
+
+  <!-- SENTENCE -->
+  <div class="panel" id="panel-sentence">
+    <div class="qcard">
+      <div class="qlabel">Use this word in a sentence</div>
+      <div class="qhanzi" id="sHanzi"></div>
+      <div class="pinyin-lg" id="sPinyin" style="margin-top:2px;"></div>
+      <div class="trans-lg" id="sTrans" style="font-size:15px;margin-top:8px;color:var(--muted);font-weight:600;"></div>
+    </div>
+    <textarea id="sentenceInput" class="sentenceinput" rows="3" placeholder="Write your sentence in pinyin here…"></textarea>
+    <div class="btnrow" style="margin-top:12px;">
+      <button class="btn btn-secondary" id="showExampleBtn">Show example</button>
+      <button class="btn btn-primary" id="checkAiBtn">Check my sentence</button>
+    </div>
+    <div id="exampleBox" class="examplebox"></div>
+    <div id="aiCheckBox" class="examplebox"></div>
+    <div class="btnrow" id="sentenceSelfRow" style="margin-top:12px;display:none;">
+      <button class="btn btn-no" id="sentenceHard">Still tricky</button>
+      <button class="btn btn-yes" id="sentenceEasy">Nailed it</button>
+    </div>
+    <div class="btnrow" style="margin-top:12px;">
+      <button class="btn btn-secondary" id="sentenceNextBtn" style="flex:1;">Next word →</button>
+    </div>
+  </div>
+
+  <!-- MEASURE WORDS -->
+  <div class="panel" id="panel-mw">
+    <div class="streakbar">🔥 Streak: <span id="mwStreakNum">0</span></div>
+    <div class="qcard">
+      <div class="qlabel">Which measure word goes with this?</div>
+      <div class="qhanzi" id="mwHanzi"></div>
+      <div class="qpinyin" id="mwPinyin"></div>
+      <div class="trans-lg" id="mwTrans" style="font-size:15px;margin-top:6px;color:var(--muted);font-weight:600;"></div>
+    </div>
+    <div class="options" id="mwOptions"></div>
+    <div id="mwExplain" class="examplebox"></div>
+    <div class="btnrow" id="mwNextRow" style="margin-top:12px;display:none;">
+      <button class="btn btn-primary" id="mwNextBtn">Next →</button>
+    </div>
+  </div>
+
+  <!-- SENTENCE PATTERNS -->
+  <div class="panel" id="panel-patterns">
+    <div class="deckbar" style="margin-bottom:10px;">
+      <span>Common HSK1 sentence patterns</span>
+    </div>
+    <div id="patternsList"></div>
+  </div>
+
+  <!-- CHAT / ROLEPLAY -->
+  <div class="panel" id="panel-chat">
+    <div id="chatScenarioPicker">
+      <div class="deckbar" style="margin-bottom:10px;"><span>Pick a scenario to practice a real conversation</span></div>
+      <div id="scenarioGrid" class="scenariogrid"></div>
+    </div>
+    <div id="chatWindow" style="display:none;">
+      <div class="deckbar" style="margin-bottom:8px;">
+        <span id="chatScenarioName"></span>
+        <button class="iconbtn" id="chatEndBtn" style="width:auto;padding:0 10px;font-size:12px;">End</button>
+      </div>
+      <div id="chatMessages" class="chatmessages"></div>
+      <div class="btnrow" style="margin-top:10px;">
+        <input type="text" id="chatInput" class="typeinput" style="font-size:15px;font-weight:500;text-align:left;flex:3;" placeholder="Reply in Chinese or pinyin…" autocomplete="off">
+        <button class="btn btn-primary" id="chatSendBtn" style="flex:1;">Send</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const VOCAB = [{"n": 1, "w": "爱", "p": "ài", "pos": "verb", "t": "to love", "cat": "Verb / Action", "ex": ["Wǒ ài wǒ de jiārén.", "I love my family."], "level": "Old HSK1 Words"}, {"n": 2, "w": "八", "p": "bā", "pos": "number", "t": "eight", "cat": "Numbers", "ex": ["Xiànzài bā diǎn.", "It's eight o'clock now."], "level": "Old HSK1 Words"}, {"n": 3, "w": "爸爸", "p": "bàba", "pos": "noun", "t": "dad", "cat": "Family & People", "ex": ["Wǒ bàba shì lǎoshī.", "My dad is a teacher."], "level": "Old HSK1 Words"}, {"n": 4, "w": "吧", "p": "ba", "pos": "auxiliary", "t": "particle indicating suggestion, confirmation, or hesitation", "cat": "Grammar Particle", "ex": ["Wǒmen qù chī fàn ba.", "Let's go eat, shall we."], "note": "Added at the end of a sentence to soften it into a suggestion, request, or guess — like adding \"...okay?\" or \"let's...\" in English.", "level": "New HSK1 Words"}, {"n": 5, "w": "白天", "p": "báitiān", "pos": "noun", "t": "daytime", "cat": "Time", "ex": ["Wǒ báitiān gōngzuò.", "I work during the daytime."], "level": "New HSK1 Words"}, {"n": 6, "w": "百", "p": "bǎi", "pos": "number", "t": "hundred", "cat": "Numbers", "ex": ["Zhè běn shū yǒu yìbǎi yè.", "This book has a hundred pages."], "level": "New HSK1 Words"}, {"n": 7, "w": "半", "p": "bàn", "pos": "number", "t": "half; (half, semi-)", "cat": "Numbers", "ex": ["Xiànzài shì liǎng diǎn bàn.", "It's half past two now."], "level": "New HSK1 Words"}, {"n": 8, "w": "包子", "p": "bāozi", "pos": "noun", "t": "steamed stuffed bun", "cat": "Food & Drink", "ex": ["Wǒ xǐhuan chī bāozi.", "I like eating steamed buns."], "level": "New HSK1 Words", "mw": "个"}, {"n": 9, "w": "杯子", "p": "bēizi", "pos": "noun", "t": "cup, glass", "cat": "Food & Drink", "ex": ["Zhè ge bēizi hěn piàoliang.", "This cup is very pretty."], "level": "Old HSK1 Words"}, {"n": 10, "w": "本", "p": "běn", "pos": "classifier", "t": "measure word for books", "cat": "Measure Word", "ex": ["Wǒ yǒu sān běn shū.", "I have three books."], "level": "Old HSK1 Words"}, {"n": 11, "w": "边", "p": "biān", "pos": "noun", "t": "side; suffix indicating direction", "cat": "Noun / Thing", "ex": ["Māo zài zhuōzi pángbiān.", "The cat is beside the table."], "level": "New HSK1 Words"}, {"n": 12, "w": "病", "p": "bìng", "pos": "noun", "t": "illness, disease; to be ill", "cat": "Noun / Thing", "ex": ["Tā shēng bìng le.", "He got sick."], "level": "New HSK1 Words"}, {"n": 13, "w": "不", "p": "bù", "pos": "adverb", "t": "not, no", "cat": "Adverb", "ex": ["Wǒ bù xǐhuan kāfēi.", "I don't like coffee."], "level": "Old HSK1 Words"}, {"n": 14, "w": "不客气", "p": "bú kèqi", "pos": "phrase", "t": "you're welcome", "cat": "Greetings & Phrases", "ex": ["Xièxie! — Bú kèqi.", "Thanks! — You're welcome."], "level": "Old HSK1 Words"}, {"n": 15, "w": "不要", "p": "búyào", "pos": "adverb", "t": "don't, not want", "cat": "Adverb", "ex": ["Búyào chī tài duō táng.", "Don't eat too much candy."], "level": "New HSK1 Words"}, {"n": 16, "w": "菜", "p": "cài", "pos": "noun", "t": "vegetable, dish", "cat": "Food & Drink", "ex": ["Zhè ge cài hěn hǎochī.", "This dish is delicious."], "level": "Old HSK1 Words"}, {"n": 17, "w": "茶", "p": "chá", "pos": "noun", "t": "tea", "cat": "Food & Drink", "ex": ["Wǒ měitiān hē chá.", "I drink tea every day."], "level": "Old HSK1 Words", "mw": "杯"}, {"n": 18, "w": "唱", "p": "chàng", "pos": "verb", "t": "to sing", "cat": "Verb / Action", "ex": ["Tā chàng gē chàng de hěn hǎotīng.", "She sings very beautifully."], "level": "New HSK1 Words"}, {"n": 19, "w": "超市", "p": "chāoshì", "pos": "noun", "t": "supermarket", "cat": "Places", "ex": ["Wǒ qù chāoshì mǎi dōngxi.", "I'm going to the supermarket to buy things."], "level": "New HSK1 Words"}, {"n": 20, "w": "车", "p": "chē", "pos": "noun", "t": "vehicle, car", "cat": "Transportation", "ex": ["Zhè liàng chē hěn guì.", "This car is expensive."], "level": "New HSK1 Words", "mw": "辆"}, {"n": 21, "w": "吃", "p": "chī", "pos": "verb", "t": "to eat", "cat": "Verb / Action", "ex": ["Wǒ xiǎng chī miànbāo.", "I want to eat bread."], "level": "Old HSK1 Words"}, {"n": 22, "w": "出租车", "p": "chūzūchē", "pos": "noun", "t": "taxi", "cat": "Transportation", "ex": ["Wǒ zuò chūzūchē qù jīchǎng.", "I take a taxi to the airport."], "level": "Old HSK1 Words", "mw": "辆"}, {"n": 23, "w": "穿", "p": "chuān", "pos": "verb", "t": "to wear", "cat": "Verb / Action", "ex": ["Tā chuān le yí jiàn xīn yīfu.", "She wore a new piece of clothing."], "level": "New HSK1 Words"}, {"n": 24, "w": "打电话", "p": "dǎ diànhuà", "pos": "phrase", "t": "to make a phone call", "cat": "Objects & Tech", "ex": ["Wǒ gěi māma dǎ diànhuà.", "I call my mom."], "level": "Old HSK1 Words"}, {"n": 25, "w": "大", "p": "dà", "pos": "adjective", "t": "big", "cat": "Description", "ex": ["Zhè ge fángjiān hěn dà.", "This room is big."], "level": "Old HSK1 Words"}, {"n": 26, "w": "大家", "p": "dàjiā", "pos": "pronoun", "t": "everyone", "cat": "Family & People", "ex": ["Dàjiā hǎo!", "Hello everyone!"], "level": "New HSK1 Words"}, {"n": 27, "w": "大学", "p": "dàxué", "pos": "noun", "t": "university", "cat": "Noun / Thing", "ex": ["Wǒ zài dàxué xuéxí Hànyǔ.", "I study Chinese at university."], "level": "New HSK1 Words"}, {"n": 28, "w": "大学生", "p": "dàxuéshēng", "pos": "noun", "t": "university student", "cat": "Family & People", "ex": ["Tā shì dàxuéshēng.", "She is a university student."], "level": "New HSK1 Words"}, {"n": 29, "w": "到", "p": "dào", "pos": "verb", "t": "to arrive", "cat": "Verb / Action", "ex": ["Wǒmen dào jiā le.", "We've arrived home."], "level": "New HSK1 Words"}, {"n": 30, "w": "的", "p": "de", "pos": "auxiliary", "t": "possessive or modifying particle", "cat": "Grammar Particle", "ex": ["Zhè shì wǒ de shū.", "This is my book."], "note": "Links a description or owner to a noun — similar to \"'s\" or \"that/which\" in English (我的 = my, 好看的 = the pretty one).", "level": "Old HSK1 Words"}, {"n": 31, "w": "第", "p": "dì", "pos": "prefix", "t": "prefix for ordinal numbers", "cat": "Grammar Particle", "ex": ["Zhè shì wǒ dì-yī cì lái Zhōngguó.", "This is my first time coming to China."], "level": "New HSK1 Words"}, {"n": 32, "w": "弟弟", "p": "dìdi", "pos": "noun", "t": "younger brother", "cat": "Family & People", "ex": ["Wǒ dìdi hěn gāoxìng.", "My younger brother is very happy."], "level": "New HSK1 Words", "mw": "个"}, {"n": 33, "w": "点", "p": "diǎn", "pos": "classifier", "t": "measure word for small round things; (point, dot)", "cat": "Measure Word", "ex": ["Xiànzài jǐ diǎn le?", "What time is it now?"], "level": "Old HSK1 Words"}, {"n": 34, "w": "店", "p": "diàn", "pos": "noun", "t": "shop, store", "cat": "Places", "ex": ["Zhè jiā diàn hěn piányi.", "This shop is cheap."], "level": "New HSK1 Words"}, {"n": 35, "w": "电话", "p": "diànhuà", "pos": "noun", "t": "telephone, phone call", "cat": "Objects & Tech", "ex": ["Nǐ de diànhuà hàomǎ shì duōshao?", "What is your phone number?"], "level": "New HSK1 Words"}, {"n": 36, "w": "电脑", "p": "diànnǎo", "pos": "noun", "t": "computer", "cat": "Objects & Tech", "ex": ["Wǒ de diànnǎo huài le.", "My computer is broken."], "level": "Old HSK1 Words", "mw": "台"}, {"n": 37, "w": "电视", "p": "diànshì", "pos": "noun", "t": "television", "cat": "Objects & Tech", "ex": ["Wǒmen wǎnshang kàn diànshì.", "We watch TV in the evening."], "level": "Old HSK1 Words", "mw": "台"}, {"n": 38, "w": "电影", "p": "diànyǐng", "pos": "noun", "t": "movie, film", "cat": "Noun / Thing", "ex": ["Wǒ xǐhuan kàn diànyǐng.", "I like watching movies."], "level": "Old HSK1 Words", "mw": "部"}, {"n": 39, "w": "电影院", "p": "diànyǐngyuàn", "pos": "noun", "t": "cinema", "cat": "Places", "ex": ["Diànyǐngyuàn zài nàr.", "The cinema is over there."], "level": "New HSK1 Words"}, {"n": 40, "w": "东西", "p": "dōngxi", "pos": "noun", "t": "thing, object", "cat": "Noun / Thing", "ex": ["Wǒ mǎi le hěn duō dōngxi.", "I bought a lot of things."], "level": "Old HSK1 Words", "mw": "件"}, {"n": 41, "w": "都", "p": "dōu", "pos": "adverb", "t": "all, both", "cat": "Adverb", "ex": ["Wǒmen dōu shì xuéshēng.", "We are all students."], "note": "Means \"all/both\" — placed after the subject to show it applies to everyone/everything mentioned.", "level": "Old HSK1 Words"}, {"n": 42, "w": "读", "p": "dú", "pos": "verb", "t": "to read", "cat": "Verb / Action", "ex": ["Wǒ měitiān dú Hànzì.", "I read Chinese characters every day."], "level": "Old HSK1 Words"}, {"n": 43, "w": "读书", "p": "dúshū", "pos": "verb", "t": "to read a book", "cat": "Objects & Tech", "ex": ["Tā xǐhuan dúshū.", "She likes reading books."], "level": "New HSK1 Words"}, {"n": 44, "w": "对", "p": "duì", "pos": "adjective", "t": "correct, right; to, toward, for; (to treat; pair)", "cat": "Description", "ex": ["Nǐ shuō de duì.", "What you said is correct."], "level": "New HSK1 Words"}, {"n": 45, "w": "对不起", "p": "duìbuqǐ", "pos": "verb", "t": "sorry", "cat": "Greetings & Phrases", "ex": ["Duìbuqǐ, wǒ lái wǎn le.", "Sorry, I'm late."], "level": "Old HSK1 Words"}, {"n": 46, "w": "多", "p": "duō", "pos": "adjective", "t": "many, much; to have more; how many, how much; (more, over)", "cat": "Question Words", "ex": ["Zhèr yǒu hěn duō rén.", "There are a lot of people here."], "level": "Old HSK1 Words"}, {"n": 47, "w": "多少", "p": "duōshao", "pos": "pronoun", "t": "how many, how much", "cat": "Question Words", "ex": ["Zhè ge duōshao qián?", "How much is this?"], "level": "Old HSK1 Words"}, {"n": 48, "w": "儿子", "p": "érzi", "pos": "noun", "t": "son", "cat": "Family & People", "ex": ["Wǒ de érzi hěn kě'ài.", "My son is very cute."], "level": "Old HSK1 Words", "mw": "个"}, {"n": 49, "w": "二", "p": "èr", "pos": "number", "t": "two", "cat": "Numbers", "ex": ["Wǒ yǒu liǎng ge — bú shì, èr ge péngyou.", "I have two friends."], "level": "Old HSK1 Words"}, {"n": 50, "w": "饭", "p": "fàn", "pos": "noun", "t": "cooked rice, meal", "cat": "Food & Drink", "ex": ["Wǒmen qù chī fàn ba.", "Let's go eat."], "level": "New HSK1 Words"}, {"n": 51, "w": "饭店", "p": "fàndiàn", "pos": "noun", "t": "restaurant", "cat": "Places", "ex": ["Zhè jiā fàndiàn de cài hěn hǎochī.", "This restaurant's food is delicious."], "level": "Old HSK1 Words", "mw": "家"}, {"n": 52, "w": "房间", "p": "fángjiān", "pos": "noun", "t": "room", "cat": "Places", "ex": ["Wǒ de fángjiān hěn xiǎo.", "My room is small."], "level": "New HSK1 Words", "mw": "间"}, {"n": 53, "w": "非常", "p": "fēicháng", "pos": "adverb", "t": "very, extremely", "cat": "Adverb", "ex": ["Jīntiān fēicháng rè.", "Today is extremely hot."], "level": "New HSK1 Words"}, {"n": 54, "w": "飞机", "p": "fēijī", "pos": "noun", "t": "airplane", "cat": "Transportation", "ex": ["Wǒmen zuò fēijī qù Běijīng.", "We're taking a plane to Beijing."], "level": "Old HSK1 Words", "mw": "架"}, {"n": 55, "w": "分", "p": "fēn", "pos": "classifier", "t": "minute; (to divide, to separate; component, part)", "cat": "Time", "ex": ["Xiànzài shì sān diǎn shí fēn.", "It's 3:10 now."], "level": "New HSK1 Words"}, {"n": 56, "w": "分钟", "p": "fēnzhōng", "pos": "classifier", "t": "minute", "cat": "Time", "ex": ["Děng wǒ wǔ fēnzhōng.", "Wait for me five minutes."], "level": "Old HSK1 Words"}, {"n": 57, "w": "高兴", "p": "gāoxìng", "pos": "adjective", "t": "happy, glad", "cat": "Description", "ex": ["Rènshi nǐ hěn gāoxìng.", "Nice to meet you."], "level": "Old HSK1 Words"}, {"n": 58, "w": "歌", "p": "gē", "pos": "noun", "t": "song", "cat": "Noun / Thing", "ex": ["Tā chàng le yì shǒu gē.", "She sang a song."], "level": "New HSK1 Words", "mw": "首"}, {"n": 59, "w": "哥哥", "p": "gēge", "pos": "noun", "t": "older brother", "cat": "Family & People", "ex": ["Wǒ gēge zài gōngzuò.", "My older brother is working."], "level": "New HSK1 Words", "mw": "个"}, {"n": 60, "w": "个", "p": "gè", "pos": "classifier", "t": "measure word for general objects", "cat": "Measure Word", "ex": ["Wǒ yǒu yí ge wèntí.", "I have a question."], "level": "Old HSK1 Words"}, {"n": 61, "w": "给", "p": "gěi", "pos": "verb", "t": "to give; (to, for)", "cat": "Verb / Action", "ex": ["Qǐng gěi wǒ yì bēi shuǐ.", "Please give me a glass of water."], "level": "New HSK1 Words"}, {"n": 62, "w": "公司", "p": "gōngsī", "pos": "noun", "t": "company", "cat": "Places", "ex": ["Wǒ zài yì jiā gōngsī gōngzuò.", "I work at a company."], "level": "New HSK1 Words", "mw": "家"}, {"n": 63, "w": "工作", "p": "gōngzuò", "pos": "verb", "t": "work; to work", "cat": "Verb / Action", "ex": ["Wǒ de gōngzuò hěn máng.", "My work is very busy."], "level": "Old HSK1 Words"}, {"n": 64, "w": "狗", "p": "gǒu", "pos": "noun", "t": "dog", "cat": "Animals", "ex": ["Wǒ jiā yǒu yì zhī gǒu.", "My family has a dog."], "level": "Old HSK1 Words", "mw": "只"}, {"n": 65, "w": "贵", "p": "guì", "pos": "adjective", "t": "expensive", "cat": "Money & Shopping", "ex": ["Zhè jiàn yīfu tài guì le.", "This piece of clothing is too expensive."], "level": "New HSK1 Words"}, {"n": 66, "w": "国", "p": "guó", "pos": "noun", "t": "country", "cat": "Places", "ex": ["Nǐ shì nǎ guó rén?", "What country are you from?"], "level": "New HSK1 Words"}, {"n": 67, "w": "还", "p": "hái", "pos": "adverb", "t": "still, also; quite", "cat": "Adverb", "ex": ["Wǒ hái méi chī fàn.", "I haven't eaten yet."], "note": "Means \"still/also/even\" — shows something continues or adds to what was said.", "level": "New HSK1 Words"}, {"n": 68, "w": "孩子", "p": "háizi", "pos": "noun", "t": "child", "cat": "Family & People", "ex": ["Zhè ge háizi hěn kě'ài.", "This child is very cute."], "level": "New HSK1 Words", "mw": "个"}, {"n": 69, "w": "汉语", "p": "Hànyǔ", "pos": "noun", "t": "Chinese language", "cat": "Noun / Thing", "ex": ["Wǒ zài xuéxí Hànyǔ.", "I'm studying Chinese."], "level": "Old HSK1 Words"}, {"n": 70, "w": "汉字", "p": "Hànzì", "pos": "noun", "t": "Chinese character", "cat": "Noun / Thing", "ex": ["Hànzì hěn nán xiě.", "Chinese characters are hard to write."], "level": "New HSK1 Words", "mw": "个"}, {"n": 71, "w": "好", "p": "hǎo", "pos": "adjective", "t": "good; (well); (to be fond of)", "cat": "Description", "ex": ["Nǐ hǎo ma?", "How are you?"], "level": "Old HSK1 Words"}, {"n": 72, "w": "好吃", "p": "hǎochī", "pos": "adjective", "t": "delicious, tasty", "cat": "Food & Drink", "ex": ["Zhè ge cài hěn hǎochī.", "This dish is delicious."], "level": "New HSK1 Words"}, {"n": 73, "w": "好看", "p": "hǎokàn", "pos": "adjective", "t": "good-looking", "cat": "Description", "ex": ["Zhè jiàn yīfu hěn hǎokàn.", "This piece of clothing looks good."], "level": "New HSK1 Words"}, {"n": 74, "w": "好听", "p": "hǎotīng", "pos": "adjective", "t": "pleasant to listen to", "cat": "Description", "ex": ["Zhè shǒu gē hěn hǎotīng.", "This song sounds nice."], "level": "New HSK1 Words"}, {"n": 75, "w": "好玩儿", "p": "hǎowánr", "pos": "adjective", "t": "fun, amusing", "cat": "Description", "ex": ["Zhè ge yóuxì hěn hǎowánr.", "This game is fun."], "level": "New HSK1 Words"}, {"n": 76, "w": "号", "p": "hào", "pos": "noun", "t": "number; measure word for people, items", "cat": "Noun / Thing", "ex": ["Jīntiān jǐ hào?", "What's today's date?"], "level": "Old HSK1 Words"}, {"n": 77, "w": "喝", "p": "hē", "pos": "verb", "t": "to drink", "cat": "Verb / Action", "ex": ["Wǒ xiǎng hē shuǐ.", "I want to drink water."], "level": "Old HSK1 Words"}, {"n": 78, "w": "和", "p": "hé", "pos": "preposition", "t": "and, with", "cat": "Preposition", "ex": ["Wǒ hé péngyou qù chāoshì.", "My friend and I go to the supermarket."], "level": "Old HSK1 Words"}, {"n": 79, "w": "很", "p": "hěn", "pos": "adverb", "t": "very", "cat": "Adverb", "ex": ["Wǒ hěn gāoxìng.", "I'm very happy."], "level": "Old HSK1 Words"}, {"n": 80, "w": "后", "p": "hòu", "pos": "noun", "t": "behind, later", "cat": "Noun / Thing", "ex": ["Xiàkè hòu wǒ huí jiā.", "After class I go home."], "level": "New HSK1 Words"}, {"n": 81, "w": "回", "p": "huí", "pos": "verb", "t": "to return; (measure word for times)", "cat": "Verb / Action", "ex": ["Wǒ xiǎng huí jiā.", "I want to go home."], "level": "Old HSK1 Words"}, {"n": 82, "w": "会", "p": "huì", "pos": "verb", "t": "can, to be able to", "cat": "Verb / Action", "ex": ["Wǒ huì shuō Hànyǔ.", "I can speak Chinese."], "level": "Old HSK1 Words"}, {"n": 83, "w": "火车", "p": "huǒchē", "pos": "noun", "t": "train", "cat": "Transportation", "ex": ["Wǒmen zuò huǒchē qù shàng hǎi.", "We take the train to Shanghai."], "level": "New HSK1 Words"}, {"n": 84, "w": "鸡蛋", "p": "jīdàn", "pos": "noun", "t": "egg", "cat": "Food & Drink", "ex": ["Zǎofàn wǒ chī jīdàn.", "I eat eggs for breakfast."], "level": "New HSK1 Words", "mw": "个"}, {"n": 85, "w": "几", "p": "jǐ", "pos": "pronoun", "t": "how many, a few", "cat": "Question Words", "ex": ["Nǐ jiā yǒu jǐ ge rén?", "How many people are in your family?"], "level": "Old HSK1 Words"}, {"n": 86, "w": "家", "p": "jiā", "pos": "noun", "t": "home, family; measure word for families; (suffix indicating a person specializing in something)", "cat": "Family & People", "ex": ["Wǒ jiā yǒu sì ge rén.", "There are four people in my family."], "level": "Old HSK1 Words"}, {"n": 87, "w": "家人", "p": "jiārén", "pos": "noun", "t": "family member", "cat": "Family & People", "ex": ["Wǒ hé jiārén zhù zài yìqǐ.", "I live together with my family."], "level": "New HSK1 Words"}, {"n": 88, "w": "见", "p": "jiàn", "pos": "verb", "t": "to see", "cat": "Verb / Action", "ex": ["Hěn gāoxìng jiàn dào nǐ.", "Nice to meet you."], "level": "New HSK1 Words"}, {"n": 89, "w": "件", "p": "jiàn", "pos": "classifier", "t": "measure word for items", "cat": "Measure Word", "ex": ["Wǒ mǎi le yí jiàn yīfu.", "I bought a piece of clothing."], "level": "New HSK1 Words"}, {"n": 90, "w": "饺子", "p": "jiǎozi", "pos": "noun", "t": "dumpling", "cat": "Food & Drink", "ex": ["Wǒmen jīntiān chī jiǎozi.", "We're eating dumplings today."], "level": "New HSK1 Words", "mw": "个"}, {"n": 91, "w": "叫", "p": "jiào", "pos": "verb", "t": "to be called, to call; to make; (by)", "cat": "Verb / Action", "ex": ["Nǐ jiào shénme míngzi?", "What is your name?"], "level": "Old HSK1 Words"}, {"n": 92, "w": "姐姐", "p": "jiějie", "pos": "noun", "t": "older sister", "cat": "Family & People", "ex": ["Wǒ jiějie zài xuéxiào.", "My older sister is at school."], "level": "New HSK1 Words", "mw": "个"}, {"n": 93, "w": "今年", "p": "jīnnián", "pos": "noun", "t": "this year", "cat": "Time", "ex": ["Jīnnián wǒ èrshí suì.", "This year I am 20 years old."], "level": "New HSK1 Words"}, {"n": 94, "w": "今天", "p": "jīntiān", "pos": "noun", "t": "today", "cat": "Time", "ex": ["Jīntiān tiānqì hěn hǎo.", "The weather is good today."], "level": "Old HSK1 Words"}, {"n": 95, "w": "九", "p": "jiǔ", "pos": "number", "t": "nine", "cat": "Numbers", "ex": ["Xiànzài jiǔ diǎn.", "It's nine o'clock now."], "level": "Old HSK1 Words"}, {"n": 96, "w": "觉得", "p": "juéde", "pos": "verb", "t": "to feel, to think", "cat": "Verb / Action", "ex": ["Wǒ juéde zhè ge diànyǐng hěn hǎo.", "I think this movie is good."], "level": "New HSK1 Words"}, {"n": 97, "w": "开", "p": "kāi", "pos": "verb", "t": "to open", "cat": "Verb / Action", "ex": ["Qǐng kāi mén.", "Please open the door."], "level": "Old HSK1 Words"}, {"n": 98, "w": "开车", "p": "kāichē", "pos": "verb", "t": "to drive", "cat": "Transportation", "ex": ["Wǒ bú huì kāichē.", "I can't drive."], "level": "New HSK1 Words"}, {"n": 99, "w": "看", "p": "kàn", "pos": "verb", "t": "to see, to look", "cat": "Verb / Action", "ex": ["Wǒ xǐhuan kàn shū.", "I like reading books."], "level": "Old HSK1 Words"}, {"n": 100, "w": "看病", "p": "kànbìng", "pos": "verb", "t": "to see a doctor", "cat": "Family & People", "ex": ["Wǒ qù yīyuàn kànbìng.", "I'm going to the hospital to see a doctor."], "level": "New HSK1 Words"}, {"n": 101, "w": "看见", "p": "kànjiàn", "pos": "verb", "t": "to see", "cat": "Verb / Action", "ex": ["Wǒ kànjiàn tā le.", "I saw him."], "level": "Old HSK1 Words"}, {"n": 102, "w": "可以", "p": "kěyǐ", "pos": "verb", "t": "can, may; okay, fine", "cat": "Verb / Action", "ex": ["Wǒ kěyǐ jìn lái ma?", "May I come in?"], "level": "New HSK1 Words"}, {"n": 103, "w": "课", "p": "kè", "pos": "noun", "t": "class, lesson", "cat": "Noun / Thing", "ex": ["Wǒmen jīntiān yǒu Hànyǔ kè.", "We have Chinese class today."], "level": "New HSK1 Words", "mw": "节"}, {"n": 104, "w": "口", "p": "kǒu", "pos": "noun", "t": "mouth; measure word for family members, bites", "cat": "Measure Word", "ex": ["Tā de kǒu hěn dà.", "His mouth is big."], "level": "New HSK1 Words"}, {"n": 105, "w": "块", "p": "kuài", "pos": "classifier", "t": "measure word for pieces, chunks, money", "cat": "Money & Shopping", "ex": ["Zhè ge sān kuài qián.", "This costs three yuan."], "level": "Old HSK1 Words"}, {"n": 106, "w": "来", "p": "lái", "pos": "verb", "t": "to come", "cat": "Verb / Action", "ex": ["Qǐng nǐ lái zhèr.", "Please come here."], "level": "Old HSK1 Words"}, {"n": 107, "w": "老师", "p": "lǎoshī", "pos": "noun", "t": "teacher", "cat": "Family & People", "ex": ["Wǒ de lǎoshī hěn hǎo.", "My teacher is very nice."], "level": "Old HSK1 Words", "mw": "位"}, {"n": 108, "w": "了", "p": "le", "pos": "auxiliary", "t": "particle indicating completed action or change of state", "cat": "Grammar Particle", "ex": ["Wǒ chī fàn le.", "I have eaten."], "note": "Placed after a verb or at the end of a sentence to mark a completed action or a change of state.", "level": "Old HSK1 Words"}, {"n": 109, "w": "冷", "p": "lěng", "pos": "adjective", "t": "cold", "cat": "Weather", "ex": ["Jīntiān hěn lěng.", "Today is very cold."], "level": "Old HSK1 Words"}, {"n": 110, "w": "里", "p": "lǐ", "pos": "noun", "t": "inside, in, mile", "cat": "Places", "ex": ["Shū zài bāo lǐ.", "The book is in the bag."], "level": "Old HSK1 Words"}, {"n": 111, "w": "两", "p": "liǎng", "pos": "number", "t": "two", "cat": "Numbers", "ex": ["Wǒ yǒu liǎng ge péngyou.", "I have two friends."], "level": "New HSK1 Words"}, {"n": 112, "w": "零", "p": "líng", "pos": "number", "t": "zero", "cat": "Numbers", "ex": ["Xiànzài shì líng diǎn.", "It's midnight (zero o'clock) now."], "level": "New HSK1 Words"}, {"n": 113, "w": "六", "p": "liù", "pos": "number", "t": "six", "cat": "Numbers", "ex": ["Xiànzài liù diǎn.", "It's six o'clock now."], "level": "Old HSK1 Words"}, {"n": 114, "w": "妈妈", "p": "māma", "pos": "noun", "t": "mom", "cat": "Family & People", "ex": ["Wǒ māma zuò fàn hěn hǎochī.", "My mom cooks delicious food."], "level": "Old HSK1 Words"}, {"n": 115, "w": "吗", "p": "ma", "pos": "auxiliary", "t": "question particle", "cat": "Grammar Particle", "ex": ["Nǐ hǎo ma?", "How are you?"], "note": "Added at the end of a statement to turn it into a yes/no question.", "level": "Old HSK1 Words"}, {"n": 116, "w": "买", "p": "mǎi", "pos": "verb", "t": "to buy", "cat": "Verb / Action", "ex": ["Wǒ xiǎng mǎi yí jiàn yīfu.", "I want to buy a piece of clothing."], "level": "Old HSK1 Words"}, {"n": 117, "w": "卖", "p": "mài", "pos": "verb", "t": "to sell", "cat": "Verb / Action", "ex": ["Zhè jiā diàn mài shuǐguǒ.", "This shop sells fruit."], "level": "New HSK1 Words"}, {"n": 118, "w": "忙", "p": "máng", "pos": "adjective", "t": "busy; to be busy", "cat": "Description", "ex": ["Wǒ zuìjìn hěn máng.", "I've been very busy lately."], "level": "New HSK1 Words"}, {"n": 119, "w": "猫", "p": "māo", "pos": "noun", "t": "cat", "cat": "Animals", "ex": ["Wǒ jiā yǒu yì zhī māo.", "My family has a cat."], "level": "Old HSK1 Words", "mw": "只"}, {"n": 120, "w": "没关系", "p": "méi guānxi", "pos": "phrase", "t": "never mind, it's okay", "cat": "Phrase", "ex": ["Duìbuqǐ! — Méi guānxi.", "Sorry! — It's okay."], "level": "Old HSK1 Words"}, {"n": 121, "w": "没事", "p": "méishì", "pos": "verb", "t": "to have nothing to do, it doesn't matter", "cat": "Verb / Action", "ex": ["Nǐ hái hǎo ma? — Méishì.", "Are you okay? — It's fine."], "level": "New HSK1 Words"}, {"n": 122, "w": "没有", "p": "méiyǒu", "pos": "verb", "t": "to not have; have not", "cat": "Verb / Action", "ex": ["Wǒ méiyǒu qián.", "I don't have money."], "level": "Old HSK1 Words"}, {"n": 123, "w": "妹妹", "p": "mèimei", "pos": "noun", "t": "younger sister", "cat": "Family & People", "ex": ["Wǒ mèimei hěn xǐhuan chàng gē.", "My younger sister loves singing."], "level": "New HSK1 Words", "mw": "个"}, {"n": 124, "w": "们", "p": "men", "pos": "suffix", "t": "plural suffix for pronouns and nouns", "cat": "Grammar Particle", "ex": ["Lǎoshīmen dōu hěn hǎo.", "The teachers are all nice."], "note": "Attached to pronouns or people-nouns to make them plural: 我们 = we, 老师们 = teachers.", "level": "New HSK1 Words"}, {"n": 125, "w": "米饭", "p": "mǐfàn", "pos": "noun", "t": "cooked rice", "cat": "Food & Drink", "ex": ["Wǒ xiǎng chī mǐfàn.", "I want to eat rice."], "level": "Old HSK1 Words"}, {"n": 126, "w": "面包", "p": "miànbāo", "pos": "noun", "t": "bread", "cat": "Food & Drink", "ex": ["Zǎofàn wǒ chī miànbāo.", "I eat bread for breakfast."], "level": "New HSK1 Words", "mw": "个"}, {"n": 127, "w": "面条儿", "p": "miàntiáor", "pos": "noun", "t": "noodles", "cat": "Noun / Thing", "ex": ["Wǒ xǐhuan chī miàntiáor.", "I like eating noodles."], "level": "New HSK1 Words", "mw": "碗"}, {"n": 128, "w": "明年", "p": "míngnián", "pos": "noun", "t": "next year", "cat": "Time", "ex": ["Míngnián wǒ qù Zhōngguó.", "Next year I'm going to China."], "level": "New HSK1 Words"}, {"n": 129, "w": "明天", "p": "míngtiān", "pos": "noun", "t": "tomorrow", "cat": "Time", "ex": ["Míngtiān shì xīngqīliù.", "Tomorrow is Saturday."], "level": "Old HSK1 Words"}, {"n": 130, "w": "名字", "p": "míngzi", "pos": "noun", "t": "name", "cat": "Noun / Thing", "ex": ["Nǐ de míngzi shì shénme?", "What is your name?"], "level": "Old HSK1 Words", "mw": "个"}, {"n": 131, "w": "哪", "p": "nǎ", "pos": "pronoun", "t": "which", "cat": "Question Words", "ex": ["Nǐ shì nǎ guó rén?", "Which country are you from?"], "level": "Old HSK1 Words"}, {"n": 132, "w": "哪个", "p": "nǎge", "pos": "pronoun", "t": "which one", "cat": "Question Words", "ex": ["Nǐ xǐhuan nǎ ge?", "Which one do you like?"], "level": "New HSK1 Words"}, {"n": 133, "w": "哪里", "p": "nǎlǐ", "pos": "pronoun", "t": "where", "cat": "Question Words", "ex": ["Cèsuǒ zài nǎlǐ?", "Where is the bathroom?"], "level": "New HSK1 Words"}, {"n": 134, "w": "哪儿", "p": "nǎr", "pos": "pronoun", "t": "where", "cat": "Question Words", "ex": ["Nǐ qù nǎr?", "Where are you going?"], "level": "Old HSK1 Words"}, {"n": 135, "w": "哪些", "p": "nǎxiē", "pos": "pronoun", "t": "which ones", "cat": "Question Words", "ex": ["Nǐ mǎi le nǎxiē dōngxi?", "Which things did you buy?"], "level": "New HSK1 Words"}, {"n": 136, "w": "那", "p": "nà", "pos": "pronoun", "t": "that; (then)", "cat": "Pronoun", "ex": ["Nà shì wǒ de shū.", "That is my book."], "level": "Old HSK1 Words"}, {"n": 137, "w": "那边", "p": "nàbiān", "pos": "pronoun", "t": "over there", "cat": "Places", "ex": ["Chāoshì zài nàbiān.", "The supermarket is over there."], "level": "New HSK1 Words"}, {"n": 138, "w": "那个", "p": "nàge", "pos": "pronoun", "t": "that one", "cat": "Pronoun", "ex": ["Wǒ xǐhuan nà ge.", "I like that one."], "level": "New HSK1 Words"}, {"n": 139, "w": "那里", "p": "nàlǐ", "pos": "pronoun", "t": "there", "cat": "Places", "ex": ["Wǒ jiā zài nàlǐ.", "My home is over there."], "level": "New HSK1 Words"}, {"n": 140, "w": "那儿", "p": "nàr", "pos": "pronoun", "t": "there", "cat": "Places", "ex": ["Tā zài nàr gōngzuò.", "He works over there."], "level": "New HSK1 Words"}, {"n": 141, "w": "那些", "p": "nàxiē", "pos": "pronoun", "t": "those", "cat": "Pronoun", "ex": ["Nàxiē shū shì wǒ de.", "Those books are mine."], "level": "New HSK1 Words"}, {"n": 142, "w": "男", "p": "nán", "pos": "adjective", "t": "male", "cat": "Description", "ex": ["Tā shì nán de.", "He is male."], "level": "New HSK1 Words"}, {"n": 143, "w": "男朋友", "p": "nánpéngyou", "pos": "noun", "t": "boyfriend", "cat": "Family & People", "ex": ["Tā yǒu nánpéngyou le.", "She has a boyfriend now."], "level": "New HSK1 Words"}, {"n": 144, "w": "呢", "p": "ne", "pos": "auxiliary", "t": "question or continuation particle", "cat": "Grammar Particle", "ex": ["Wǒ hěn hǎo, nǐ ne?", "I'm good, and you?"], "note": "Added at the end of a question to mean \"and...?\", or to softly ask about the same thing for a different subject.", "level": "Old HSK1 Words"}, {"n": 145, "w": "能", "p": "néng", "pos": "verb", "t": "can, be able to", "cat": "Verb / Action", "ex": ["Wǒ néng bāng nǐ.", "I can help you."], "level": "Old HSK1 Words"}, {"n": 146, "w": "你", "p": "nǐ", "pos": "pronoun", "t": "you", "cat": "Pronoun", "ex": ["Nǐ hǎo!", "Hello!"], "level": "Old HSK1 Words"}, {"n": 147, "w": "你好", "p": "nǐ hǎo", "pos": "phrase", "t": "hello", "cat": "Greetings & Phrases", "ex": ["Nǐ hǎo, wǒ jiào Xiǎomíng.", "Hello, my name is Xiaoming."], "level": "New HSK1 Words"}, {"n": 148, "w": "你们", "p": "nǐmen", "pos": "pronoun", "t": "you plural", "cat": "Pronoun", "ex": ["Nǐmen hǎo!", "Hello everyone!"], "level": "New HSK1 Words"}, {"n": 149, "w": "年", "p": "nián", "pos": "noun", "t": "year; measure word for years", "cat": "Time", "ex": ["Wǒ zài Zhōngguó zhù le yì nián.", "I lived in China for a year."], "level": "Old HSK1 Words"}, {"n": 150, "w": "您", "p": "nín", "pos": "pronoun", "t": "you", "cat": "Pronoun", "ex": ["Nín hǎo, qǐng zuò.", "Hello, please sit."], "level": "New HSK1 Words"}, {"n": 151, "w": "牛奶", "p": "niúnǎi", "pos": "noun", "t": "cow milk", "cat": "Food & Drink", "ex": ["Wǒ zǎoshang hē niúnǎi.", "I drink milk in the morning."], "level": "New HSK1 Words", "mw": "杯"}, {"n": 152, "w": "女", "p": "nǚ", "pos": "adjective", "t": "female", "cat": "Description", "ex": ["Tā shì nǚ de.", "She is female."], "level": "New HSK1 Words"}, {"n": 153, "w": "女儿", "p": "nǚ'ér", "pos": "noun", "t": "daughter", "cat": "Family & People", "ex": ["Wǒ de nǚ'ér hěn kě'ài.", "My daughter is very cute."], "level": "Old HSK1 Words", "mw": "个"}, {"n": 154, "w": "女朋友", "p": "nǚpéngyou", "pos": "noun", "t": "girlfriend", "cat": "Family & People", "ex": ["Tā yǒu nǚpéngyou le.", "He has a girlfriend now."], "level": "New HSK1 Words"}, {"n": 155, "w": "女士", "p": "nǚshì", "pos": "noun", "t": "lady, Ms.", "cat": "Family & People", "ex": ["Zhè wèi nǚshì shì lǎoshī.", "This lady is a teacher."], "level": "New HSK1 Words"}, {"n": 156, "w": "朋友", "p": "péngyou", "pos": "noun", "t": "friend", "cat": "Family & People", "ex": ["Tā shì wǒ de péngyou.", "He is my friend."], "level": "Old HSK1 Words", "mw": "个"}, {"n": 157, "w": "便宜", "p": "piányi", "pos": "adjective", "t": "cheap", "cat": "Money & Shopping", "ex": ["Zhè jiàn yīfu hěn piányi.", "This piece of clothing is cheap."], "level": "Other Words"}, {"n": 158, "w": "漂亮", "p": "piàoliang", "pos": "adjective", "t": "beautiful", "cat": "Description", "ex": ["Zhè ge fángjiān hěn piàoliang.", "This room is beautiful."], "level": "Old HSK1 Words"}, {"n": 159, "w": "苹果", "p": "píngguǒ", "pos": "noun", "t": "apple", "cat": "Food & Drink", "ex": ["Wǒ xǐhuan chī píngguǒ.", "I like eating apples."], "level": "Old HSK1 Words", "mw": "个"}, {"n": 160, "w": "七", "p": "qī", "pos": "number", "t": "seven", "cat": "Numbers", "ex": ["Xiànzài qī diǎn.", "It's seven o'clock now."], "level": "Old HSK1 Words"}, {"n": 161, "w": "起床", "p": "qǐchuáng", "pos": "verb", "t": "to get up", "cat": "Verb / Action", "ex": ["Wǒ zǎoshang qī diǎn qǐchuáng.", "I get up at seven in the morning."], "level": "New HSK1 Words"}, {"n": 162, "w": "千", "p": "qiān", "pos": "number", "t": "thousand", "cat": "Numbers", "ex": ["Zhè ge yī qiān kuài qián.", "This costs a thousand yuan."], "level": "New HSK1 Words"}, {"n": 163, "w": "前", "p": "qián", "pos": "noun", "t": "front, before", "cat": "Noun / Thing", "ex": ["Cèsuǒ zài qiánmiàn.", "The bathroom is in front."], "level": "Other Words"}, {"n": 164, "w": "钱", "p": "qián", "pos": "noun", "t": "money", "cat": "Money & Shopping", "ex": ["Wǒ méiyǒu qián.", "I don't have money."], "level": "Old HSK1 Words"}, {"n": 165, "w": "请", "p": "qǐng", "pos": "verb", "t": "please", "cat": "Verb / Action", "ex": ["Qǐng zuò.", "Please sit."], "level": "Old HSK1 Words"}, {"n": 166, "w": "请问", "p": "qǐngwèn", "pos": "verb", "t": "may I ask", "cat": "Greetings & Phrases", "ex": ["Qǐngwèn, xǐshǒujiān zài nǎlǐ?", "Excuse me, where is the bathroom?"], "level": "New HSK1 Words"}, {"n": 167, "w": "去", "p": "qù", "pos": "verb", "t": "to go", "cat": "Verb / Action", "ex": ["Wǒ xiǎng qù Zhōngguó.", "I want to go to China."], "level": "Old HSK1 Words"}, {"n": 168, "w": "去年", "p": "qùnián", "pos": "noun", "t": "last year", "cat": "Time", "ex": ["Qùnián wǒ qù le Rìběn.", "Last year I went to Japan."], "level": "New HSK1 Words"}, {"n": 169, "w": "热", "p": "rè", "pos": "adjective", "t": "hot", "cat": "Weather", "ex": ["Jīntiān hěn rè.", "Today is very hot."], "level": "Old HSK1 Words"}, {"n": 170, "w": "人", "p": "rén", "pos": "noun", "t": "person", "cat": "Noun / Thing", "ex": ["Nàr yǒu hěn duō rén.", "There are a lot of people over there."], "level": "Old HSK1 Words", "mw": "个"}, {"n": 171, "w": "认识", "p": "rènshi", "pos": "verb", "t": "to know, to recognize", "cat": "Verb / Action", "ex": ["Hěn gāoxìng rènshi nǐ.", "Nice to meet you."], "level": "Old HSK1 Words"}, {"n": 172, "w": "日", "p": "rì", "pos": "classifier", "t": "measure word for days; (sun)", "cat": "Measure Word", "ex": ["Jīntiān shì bā yuè èrshíwǔ rì.", "Today is August 25th."], "level": "New HSK1 Words"}, {"n": 173, "w": "三", "p": "sān", "pos": "number", "t": "three", "cat": "Numbers", "ex": ["Xiànzài sān diǎn.", "It's three o'clock now."], "level": "Old HSK1 Words"}, {"n": 174, "w": "商店", "p": "shāngdiàn", "pos": "noun", "t": "store, shop", "cat": "Places", "ex": ["Wǒ qù shāngdiàn mǎi dōngxi.", "I go to the store to buy things."], "level": "Old HSK1 Words", "mw": "家"}, {"n": 175, "w": "上", "p": "shàng", "pos": "noun", "t": "up, above; to go up", "cat": "Noun / Thing", "ex": ["Shū zài zhuōzi shàng.", "The book is on the table."], "level": "Old HSK1 Words"}, {"n": 176, "w": "上班", "p": "shàngbān", "pos": "verb", "t": "to go to work", "cat": "Verb / Action", "ex": ["Wǒ jiǔ diǎn shàngbān.", "I go to work at nine."], "level": "New HSK1 Words"}, {"n": 177, "w": "上课", "p": "shàngkè", "pos": "verb", "t": "to attend class", "cat": "Verb / Action", "ex": ["Wǒmen xiànzài shàngkè.", "We are attending class now."], "level": "New HSK1 Words"}, {"n": 178, "w": "上午", "p": "shàngwǔ", "pos": "noun", "t": "morning", "cat": "Time", "ex": ["Wǒ shàngwǔ yǒu kè.", "I have class in the morning."], "level": "Old HSK1 Words"}, {"n": 179, "w": "上学", "p": "shàngxué", "pos": "verb", "t": "to go to school", "cat": "Places", "ex": ["Háizi qī diǎn shàngxué.", "The child goes to school at seven."], "level": "New HSK1 Words"}, {"n": 180, "w": "少", "p": "shǎo", "pos": "adjective", "t": "few, little; to lack", "cat": "Description", "ex": ["Zhèr de rén hěn shǎo.", "There are few people here."], "level": "Old HSK1 Words"}, {"n": 181, "w": "谁", "p": "shéi", "pos": "pronoun", "t": "who", "cat": "Question Words", "ex": ["Tā shì shéi?", "Who is he?"], "level": "Old HSK1 Words"}, {"n": 182, "w": "什么", "p": "shénme", "pos": "pronoun", "t": "what", "cat": "Question Words", "ex": ["Zhè shì shénme?", "What is this?"], "level": "Old HSK1 Words"}, {"n": 183, "w": "生病", "p": "shēngbìng", "pos": "verb", "t": "to get sick", "cat": "Verb / Action", "ex": ["Wǒ shēngbìng le.", "I got sick."], "level": "New HSK1 Words"}, {"n": 184, "w": "十", "p": "shí", "pos": "number", "t": "ten", "cat": "Numbers", "ex": ["Xiànzài shí diǎn.", "It's ten o'clock now."], "level": "Old HSK1 Words"}, {"n": 185, "w": "时候", "p": "shíhou", "pos": "noun", "t": "moment, time", "cat": "Time", "ex": ["Nǐ shénme shíhou lái?", "When are you coming?"], "level": "Old HSK1 Words"}, {"n": 186, "w": "时间", "p": "shíjiān", "pos": "noun", "t": "time", "cat": "Noun / Thing", "ex": ["Wǒ méiyǒu shíjiān.", "I don't have time."], "level": "New HSK1 Words"}, {"n": 187, "w": "事", "p": "shì", "pos": "noun", "t": "matter, thing", "cat": "Noun / Thing", "ex": ["Wǒ yǒu diǎn shì.", "I have something to do."], "level": "New HSK1 Words", "mw": "件"}, {"n": 188, "w": "是", "p": "shì", "pos": "verb", "t": "to be", "cat": "Verb / Action", "ex": ["Wǒ shì xuéshēng.", "I am a student."], "level": "Old HSK1 Words"}, {"n": 189, "w": "手机", "p": "shǒujī", "pos": "noun", "t": "cell phone", "cat": "Objects & Tech", "ex": ["Wǒ de shǒujī zài nǎlǐ?", "Where is my cell phone?"], "level": "New HSK1 Words", "mw": "部"}, {"n": 190, "w": "书", "p": "shū", "pos": "noun", "t": "book", "cat": "Objects & Tech", "ex": ["Wǒ zài kàn shū.", "I'm reading a book."], "level": "Old HSK1 Words", "mw": "本"}, {"n": 191, "w": "书店", "p": "shūdiàn", "pos": "noun", "t": "bookstore", "cat": "Places", "ex": ["Wǒ qù shūdiàn mǎi shū.", "I go to the bookstore to buy books."], "level": "New HSK1 Words", "mw": "家"}, {"n": 192, "w": "水", "p": "shuǐ", "pos": "noun", "t": "water", "cat": "Noun / Thing", "ex": ["Qǐng gěi wǒ yì bēi shuǐ.", "Please give me a glass of water."], "level": "Old HSK1 Words", "mw": "杯"}, {"n": 193, "w": "水果", "p": "shuǐguǒ", "pos": "noun", "t": "fruit", "cat": "Food & Drink", "ex": ["Wǒ xǐhuan chī shuǐguǒ.", "I like eating fruit."], "level": "Old HSK1 Words"}, {"n": 194, "w": "睡", "p": "shuì", "pos": "verb", "t": "to sleep", "cat": "Verb / Action", "ex": ["Wǒ xiǎng shuìjiào le.", "I want to sleep now."], "level": "New HSK1 Words"}, {"n": 195, "w": "睡觉", "p": "shuìjiào", "pos": "verb", "t": "to sleep", "cat": "Verb / Action", "ex": ["Wǒ shí diǎn shuìjiào.", "I sleep at ten o'clock."], "level": "Old HSK1 Words"}, {"n": 196, "w": "说", "p": "shuō", "pos": "verb", "t": "to speak, to say", "cat": "Verb / Action", "ex": ["Nǐ zài shuō shénme?", "What are you saying?"], "level": "Old HSK1 Words"}, {"n": 197, "w": "说话", "p": "shuōhuà", "pos": "verb", "t": "to talk", "cat": "Verb / Action", "ex": ["Qǐng bié shuōhuà.", "Please don't talk."], "level": "New HSK1 Words"}, {"n": 198, "w": "四", "p": "sì", "pos": "number", "t": "four", "cat": "Numbers", "ex": ["Xiànzài sì diǎn.", "It's four o'clock now."], "level": "Old HSK1 Words"}, {"n": 199, "w": "岁", "p": "suì", "pos": "classifier", "t": "measure word for age", "cat": "Measure Word", "ex": ["Wǒ jīnnián èrshí suì.", "I am 20 years old this year."], "level": "Old HSK1 Words"}, {"n": 200, "w": "他", "p": "tā", "pos": "pronoun", "t": "he, him", "cat": "Pronoun", "ex": ["Tā shì wǒ de péngyou.", "He is my friend."], "level": "Old HSK1 Words"}, {"n": 201, "w": "它", "p": "tā", "pos": "pronoun", "t": "it", "cat": "Pronoun", "ex": ["Tā (māo) hěn kě'ài.", "It (the cat) is very cute."], "level": "New HSK1 Words"}, {"n": 202, "w": "她", "p": "tā", "pos": "pronoun", "t": "she", "cat": "Pronoun", "ex": ["Tā shì wǒ de lǎoshī.", "She is my teacher."], "level": "Old HSK1 Words"}, {"n": 203, "w": "他们", "p": "tāmen", "pos": "pronoun", "t": "they", "cat": "Pronoun", "ex": ["Tāmen shì xuéshēng.", "They are students."], "level": "New HSK1 Words"}, {"n": 204, "w": "它们", "p": "tāmen", "pos": "pronoun", "t": "they", "cat": "Pronoun", "level": "New HSK1 Words"}, {"n": 205, "w": "她们", "p": "tāmen", "pos": "pronoun", "t": "they", "cat": "Pronoun", "level": "New HSK1 Words"}, {"n": 206, "w": "太", "p": "tài", "pos": "adverb", "t": "too, extremely", "cat": "Adverb", "ex": ["Zhè ge tài guì le.", "This is too expensive."], "note": "Placed before an adjective to mean \"too/extremely\", often paired with 了 at the end: 太贵了 = too expensive.", "level": "Old HSK1 Words"}, {"n": 207, "w": "天", "p": "tiān", "pos": "noun", "t": "day; measure word for days", "cat": "Time", "ex": ["Wǒ zài zhèr zhù le sān tiān.", "I've stayed here for three days."], "level": "New HSK1 Words"}, {"n": 208, "w": "天气", "p": "tiānqì", "pos": "noun", "t": "weather", "cat": "Weather", "ex": ["Jīntiān tiānqì hěn hǎo.", "Today's weather is good."], "level": "Old HSK1 Words"}, {"n": 209, "w": "听", "p": "tīng", "pos": "verb", "t": "to listen", "cat": "Verb / Action", "ex": ["Wǒ xǐhuan tīng yīnyuè.", "I like listening to music."], "level": "Old HSK1 Words"}, {"n": 210, "w": "听见", "p": "tīngjiàn", "pos": "verb", "t": "to hear", "cat": "Verb / Action", "ex": ["Wǒ tīngjiàn le nǐ de huà.", "I heard what you said."], "level": "New HSK1 Words"}, {"n": 211, "w": "同学", "p": "tóngxué", "pos": "noun", "t": "classmate", "cat": "Family & People", "ex": ["Tā shì wǒ de tóngxué.", "He is my classmate."], "level": "Old HSK1 Words"}, {"n": 212, "w": "外", "p": "wài", "pos": "noun", "t": "outside, exterior", "cat": "Places", "ex": ["Māo zài mén wài.", "The cat is outside the door."], "level": "New HSK1 Words"}, {"n": 213, "w": "外边", "p": "wàibian", "pos": "noun", "t": "outside", "cat": "Places", "ex": ["Wàibian hěn lěng.", "It's cold outside."], "level": "New HSK1 Words"}, {"n": 214, "w": "玩", "p": "wán", "pos": "verb", "t": "to play", "cat": "Verb / Action", "ex": ["Háizimen zài wàibian wán.", "The children are playing outside."], "level": "New HSK1 Words"}, {"n": 215, "w": "晚", "p": "wǎn", "pos": "adjective", "t": "late", "cat": "Description", "ex": ["Duìbuqǐ, wǒ lái wǎn le.", "Sorry, I'm late."], "level": "New HSK1 Words"}, {"n": 216, "w": "晚饭", "p": "wǎnfàn", "pos": "noun", "t": "dinner", "cat": "Food & Drink", "ex": ["Wǒmen qī diǎn chī wǎnfàn.", "We eat dinner at seven."], "level": "New HSK1 Words"}, {"n": 217, "w": "晚上", "p": "wǎnshang", "pos": "noun", "t": "evening", "cat": "Time", "ex": ["Wǒ wǎnshang xuéxí Hànyǔ.", "I study Chinese in the evening."], "level": "New HSK1 Words"}, {"n": 218, "w": "喂", "p": "wèi", "pos": "interjection", "t": "hello (used when answering the phone)", "cat": "Greetings & Phrases", "ex": ["Wéi, nǐ hǎo!", "Hello! (on the phone)"], "level": "Old HSK1 Words"}, {"n": 219, "w": "问", "p": "wèn", "pos": "verb", "t": "to ask", "cat": "Verb / Action", "ex": ["Wǒ xiǎng wèn nǐ yí ge wèntí.", "I want to ask you a question."], "level": "New HSK1 Words"}, {"n": 220, "w": "问题", "p": "wèntí", "pos": "noun", "t": "question", "cat": "Noun / Thing", "ex": ["Wǒ yǒu yí ge wèntí.", "I have a question."], "level": "New HSK1 Words", "mw": "个"}, {"n": 221, "w": "我", "p": "wǒ", "pos": "pronoun", "t": "I", "cat": "Pronoun", "ex": ["Wǒ shì xuéshēng.", "I am a student."], "level": "Old HSK1 Words"}, {"n": 222, "w": "我们", "p": "wǒmen", "pos": "pronoun", "t": "we", "cat": "Pronoun", "ex": ["Wǒmen shì péngyou.", "We are friends."], "level": "Old HSK1 Words"}, {"n": 223, "w": "五", "p": "wǔ", "pos": "number", "t": "five", "cat": "Numbers", "ex": ["Xiànzài wǔ diǎn.", "It's five o'clock now."], "level": "Old HSK1 Words"}, {"n": 224, "w": "午饭", "p": "wǔfàn", "pos": "noun", "t": "lunch", "cat": "Food & Drink", "ex": ["Wǒmen shí'èr diǎn chī wǔfàn.", "We eat lunch at twelve."], "level": "New HSK1 Words"}, {"n": 225, "w": "喜欢", "p": "xǐhuan", "pos": "verb", "t": "to like", "cat": "Verb / Action", "ex": ["Wǒ xǐhuan hē chá.", "I like drinking tea."], "level": "Old HSK1 Words"}, {"n": 226, "w": "下", "p": "xià", "pos": "noun", "t": "down, below; to go down; measure word for times", "cat": "Noun / Thing", "ex": ["Shū zài zhuōzi xià.", "The book is under the table."], "level": "Old HSK1 Words"}, {"n": 227, "w": "下雨", "p": "xià yǔ", "pos": "phrase", "t": "to rain", "cat": "Weather", "ex": ["Jīntiān xià yǔ.", "It's raining today."], "level": "Old HSK1 Words"}, {"n": 228, "w": "下班", "p": "xiàbān", "pos": "verb", "t": "to get off work", "cat": "Verb / Action", "ex": ["Wǒ wǔ diǎn xiàbān.", "I get off work at five."], "level": "New HSK1 Words"}, {"n": 229, "w": "下课", "p": "xiàkè", "pos": "verb", "t": "to finish class", "cat": "Verb / Action", "ex": ["Wǒmen sān diǎn xiàkè.", "We finish class at three."], "level": "New HSK1 Words"}, {"n": 230, "w": "下午", "p": "xiàwǔ", "pos": "noun", "t": "afternoon", "cat": "Time", "ex": ["Wǒ xiàwǔ méiyǒu kè.", "I don't have class in the afternoon."], "level": "Old HSK1 Words"}, {"n": 231, "w": "先生", "p": "xiānsheng", "pos": "noun", "t": "Mr., husband", "cat": "Family & People", "ex": ["Zhè wèi xiānsheng shì lǎoshī.", "This gentleman is a teacher."], "level": "Old HSK1 Words"}, {"n": 232, "w": "现在", "p": "xiànzài", "pos": "noun", "t": "now", "cat": "Time", "ex": ["Xiànzài jǐ diǎn?", "What time is it now?"], "level": "Old HSK1 Words"}, {"n": 233, "w": "想", "p": "xiǎng", "pos": "verb", "t": "to think; to want", "cat": "Verb / Action", "ex": ["Wǒ xiǎng huí jiā.", "I want to go home."], "level": "Old HSK1 Words"}, {"n": 234, "w": "小", "p": "xiǎo", "pos": "adjective", "t": "small; prefix indicating small size or endearment", "cat": "Description", "ex": ["Zhè ge fángjiān hěn xiǎo.", "This room is small."], "level": "Old HSK1 Words"}, {"n": 235, "w": "小朋友", "p": "xiǎopéngyǒu", "pos": "noun", "t": "little friend, child", "cat": "Family & People", "ex": ["Xiǎopéngyǒu zài wàibian wán.", "The kids are playing outside."], "level": "New HSK1 Words"}, {"n": 236, "w": "小时", "p": "xiǎoshí", "pos": "noun", "t": "hour", "cat": "Time", "ex": ["Wǒ děng le yí ge xiǎoshí.", "I waited for one hour."], "level": "New HSK1 Words"}, {"n": 237, "w": "小学", "p": "xiǎoxué", "pos": "noun", "t": "primary school", "cat": "Places", "ex": ["Wǒ dìdi shàng xiǎoxué.", "My younger brother attends primary school."], "level": "New HSK1 Words"}, {"n": 238, "w": "小学生", "p": "xiǎoxuéshēng", "pos": "noun", "t": "primary school student", "cat": "Family & People", "ex": ["Tā shì xiǎoxuéshēng.", "He is a primary school student."], "level": "New HSK1 Words"}, {"n": 239, "w": "些", "p": "xiē", "pos": "classifier", "t": "measure word for an indefinite amount", "cat": "Measure Word", "ex": ["Wǒ mǎi le yìxiē shuǐguǒ.", "I bought some fruit."], "level": "Old HSK1 Words"}, {"n": 240, "w": "写", "p": "xiě", "pos": "verb", "t": "to write", "cat": "Verb / Action", "ex": ["Wǒ zài xiě Hànzì.", "I'm writing Chinese characters."], "level": "Old HSK1 Words"}, {"n": 241, "w": "谢谢", "p": "xièxie", "pos": "verb", "t": "to thank", "cat": "Greetings & Phrases", "ex": ["Xièxie nǐ de bāngzhù.", "Thank you for your help."], "level": "Old HSK1 Words"}, {"n": 242, "w": "新", "p": "xīn", "pos": "adjective", "t": "new", "cat": "Description", "ex": ["Wǒ mǎi le yí jiàn xīn yīfu.", "I bought a new piece of clothing."], "level": "New HSK1 Words"}, {"n": 243, "w": "星期", "p": "xīngqī", "pos": "noun", "t": "week", "cat": "Time", "ex": ["Zhè ge xīngqī wǒ hěn máng.", "I'm very busy this week."], "level": "Old HSK1 Words"}, {"n": 244, "w": "星期日", "p": "xīngqīrì", "pos": "noun", "t": "Sunday", "cat": "Time", "ex": ["Xīngqīrì wǒ bú shàngbān.", "I don't work on Sunday."], "level": "New HSK1 Words"}, {"n": 245, "w": "星期天", "p": "xīngqītiān", "pos": "noun", "t": "Sunday", "cat": "Time", "ex": ["Xīngqītiān wǒmen qù wánr.", "We go out to play on Sunday."], "level": "New HSK1 Words"}, {"n": 246, "w": "休息", "p": "xiūxi", "pos": "verb", "t": "to rest", "cat": "Verb / Action", "ex": ["Wǒ jīntiān xiūxi.", "I'm resting today."], "level": "New HSK1 Words"}, {"n": 247, "w": "学", "p": "xué", "pos": "verb", "t": "to learn, to study", "cat": "Verb / Action", "ex": ["Wǒ zài xué Hànyǔ.", "I'm learning Chinese."], "level": "Other Words"}, {"n": 248, "w": "学生", "p": "xuéshēng", "pos": "noun", "t": "student", "cat": "Family & People", "ex": ["Wǒ shì xuéshēng.", "I am a student."], "level": "Old HSK1 Words", "mw": "个"}, {"n": 249, "w": "学习", "p": "xuéxí", "pos": "verb", "t": "to study", "cat": "Verb / Action", "ex": ["Wǒ xǐhuan xuéxí Hànyǔ.", "I like studying Chinese."], "level": "Old HSK1 Words"}, {"n": 250, "w": "学校", "p": "xuéxiào", "pos": "noun", "t": "school", "cat": "Places", "ex": ["Wǒ de xuéxiào hěn dà.", "My school is big."], "level": "Old HSK1 Words", "mw": "所"}, {"n": 251, "w": "雪", "p": "xuě", "pos": "noun", "t": "snow", "cat": "Weather", "ex": ["Wàibian zài xià xuě.", "It's snowing outside."], "level": "New HSK1 Words"}, {"n": 252, "w": "要", "p": "yào", "pos": "verb", "t": "to want, to need", "cat": "Verb / Action", "ex": ["Wǒ yào yì bēi chá.", "I want a cup of tea."], "level": "New HSK1 Words"}, {"n": 253, "w": "也", "p": "yě", "pos": "adverb", "t": "also, too", "cat": "Adverb", "ex": ["Wǒ yě xǐhuan chī píngguǒ.", "I also like eating apples."], "note": "Means \"also/too\" — placed before the verb to add on to a previous statement.", "level": "New HSK1 Words"}, {"n": 254, "w": "一", "p": "yī", "pos": "number", "t": "one", "cat": "Numbers", "ex": ["Wǒ yǒu yí ge péngyou.", "I have one friend."], "level": "Old HSK1 Words"}, {"n": 255, "w": "衣服", "p": "yīfu", "pos": "noun", "t": "clothes", "cat": "Objects & Tech", "ex": ["Zhè jiàn yīfu hěn piàoliang.", "This piece of clothing is pretty."], "level": "Old HSK1 Words", "mw": "件"}, {"n": 256, "w": "医生", "p": "yīshēng", "pos": "noun", "t": "doctor", "cat": "Family & People", "ex": ["Wǒ māma shì yīshēng.", "My mom is a doctor."], "level": "Old HSK1 Words", "mw": "位"}, {"n": 257, "w": "医院", "p": "yīyuàn", "pos": "noun", "t": "hospital", "cat": "Places", "ex": ["Wǒ qù yīyuàn kànbìng.", "I go to the hospital to see a doctor."], "level": "Old HSK1 Words", "mw": "所"}, {"n": 258, "w": "一半", "p": "yíbàn", "pos": "number", "t": "half", "cat": "Numbers", "ex": ["Wǒ chī le yíbàn.", "I ate half of it."], "level": "New HSK1 Words"}, {"n": 259, "w": "一下", "p": "yíxià", "pos": "phrase", "t": "once, a little; (in a short while)", "cat": "Phrase", "ex": ["Qǐng děng yíxià.", "Please wait a moment."], "level": "New HSK1 Words"}, {"n": 260, "w": "椅子", "p": "yǐzi", "pos": "noun", "t": "chair", "cat": "Objects & Tech", "ex": ["Zhè ge yǐzi hěn shūfu.", "This chair is comfortable."], "level": "Old HSK1 Words", "mw": "把"}, {"n": 261, "w": "一点儿", "p": "yìdiǎnr", "pos": "phrase", "t": "a little, a bit", "cat": "Phrase", "ex": ["Wǒ hěn è, gěi wǒ yìdiǎnr fàn.", "I'm hungry, give me a little food."], "level": "Old HSK1 Words"}, {"n": 262, "w": "一些", "p": "yìxiē", "pos": "phrase", "t": "some, a few", "cat": "Phrase", "ex": ["Wǒ mǎi le yìxiē shuǐguǒ.", "I bought some fruit."], "level": "New HSK1 Words"}, {"n": 263, "w": "有", "p": "yǒu", "pos": "verb", "t": "to have, to exist", "cat": "Verb / Action", "ex": ["Wǒ yǒu yí ge gǒu.", "I have a dog."], "level": "Old HSK1 Words"}, {"n": 264, "w": "有的", "p": "yǒude", "pos": "pronoun", "t": "some of them", "cat": "Pronoun", "level": "New HSK1 Words"}, {"n": 265, "w": "有点儿", "p": "yǒudiǎnr", "pos": "adverb", "t": "a little, slightly", "cat": "Adverb", "ex": ["Jīntiān yǒudiǎnr lěng.", "It's a little cold today."], "level": "New HSK1 Words"}, {"n": 266, "w": "有些", "p": "yǒuxiē", "pos": "pronoun", "t": "some, some of; (somewhat, rather)", "cat": "Pronoun", "level": "New HSK1 Words"}, {"n": 267, "w": "雨", "p": "yǔ", "pos": "noun", "t": "rain", "cat": "Weather", "ex": ["Wàibian zài xià yǔ.", "It's raining outside."], "level": "New HSK1 Words"}, {"n": 268, "w": "元", "p": "yuán", "pos": "classifier", "t": "yuan", "cat": "Money & Shopping", "ex": ["Zhè ge shí yuán qián.", "This costs ten yuan."], "level": "New HSK1 Words"}, {"n": 269, "w": "月", "p": "yuè", "pos": "noun", "t": "month; moon", "cat": "Time", "ex": ["Xiànzài shì bā yuè.", "It's August now."], "level": "Old HSK1 Words"}, {"n": 270, "w": "再", "p": "zài", "pos": "adverb", "t": "again, then", "cat": "Adverb", "ex": ["Míngtiān zàijiàn!", "See you again tomorrow!"], "level": "Other Words"}, {"n": 271, "w": "在", "p": "zài", "pos": "verb", "t": "to be at; at; in the middle of", "cat": "Verb / Action", "ex": ["Wǒ zài jiā.", "I am at home."], "level": "Old HSK1 Words"}, {"n": 272, "w": "再见", "p": "zàijiàn", "pos": "verb", "t": "goodbye", "cat": "Greetings & Phrases", "ex": ["Zàijiàn!", "Goodbye!"], "level": "Old HSK1 Words"}, {"n": 273, "w": "早", "p": "zǎo", "pos": "adjective", "t": "early", "cat": "Description", "ex": ["Wǒ jīntiān qǐ de hěn zǎo.", "I got up very early today."], "level": "New HSK1 Words"}, {"n": 274, "w": "早饭", "p": "zǎofàn", "pos": "noun", "t": "breakfast", "cat": "Food & Drink", "ex": ["Wǒ qī diǎn chī zǎofàn.", "I eat breakfast at seven."], "level": "New HSK1 Words"}, {"n": 275, "w": "早上", "p": "zǎoshang", "pos": "noun", "t": "morning", "cat": "Time", "ex": ["Zǎoshang hǎo!", "Good morning!"], "level": "New HSK1 Words"}, {"n": 276, "w": "怎么", "p": "zěnme", "pos": "pronoun", "t": "how", "cat": "Pronoun", "ex": ["Zhè ge zì zěnme xiě?", "How do you write this character?"], "level": "Old HSK1 Words"}, {"n": 277, "w": "怎么样", "p": "zěnmeyàng", "pos": "pronoun", "t": "how about, what do you think", "cat": "Question Words", "ex": ["Nǐ jīntiān zěnmeyàng?", "How are you today?"], "level": "Old HSK1 Words"}, {"n": 278, "w": "找", "p": "zhǎo", "pos": "verb", "t": "to look for", "cat": "Verb / Action", "ex": ["Wǒ zài zhǎo wǒ de shǒujī.", "I'm looking for my cell phone."], "level": "New HSK1 Words"}, {"n": 279, "w": "这", "p": "zhè", "pos": "pronoun", "t": "this", "cat": "Pronoun", "ex": ["Zhè shì wǒ de shū.", "This is my book."], "level": "Old HSK1 Words"}, {"n": 280, "w": "这边", "p": "zhèbiān", "pos": "pronoun", "t": "here", "cat": "Places", "ex": ["Qǐng zǒu zhèbiān.", "Please walk this way."], "level": "New HSK1 Words"}, {"n": 281, "w": "这个", "p": "zhège", "pos": "pronoun", "t": "this one", "cat": "Pronoun", "ex": ["Wǒ yào zhè ge.", "I want this one."], "level": "New HSK1 Words"}, {"n": 282, "w": "这里", "p": "zhèlǐ", "pos": "pronoun", "t": "here", "cat": "Places", "ex": ["Wǒ jiā zài zhèlǐ.", "My home is here."], "level": "New HSK1 Words"}, {"n": 283, "w": "这儿", "p": "zhèr", "pos": "pronoun", "t": "here", "cat": "Places", "ex": ["Wǒ zài zhèr děng nǐ.", "I'll wait for you here."], "level": "New HSK1 Words"}, {"n": 284, "w": "这些", "p": "zhèxiē", "pos": "pronoun", "t": "these", "cat": "Pronoun", "ex": ["Zhèxiē shū shì wǒ de.", "These books are mine."], "level": "New HSK1 Words"}, {"n": 285, "w": "真", "p": "zhēn", "pos": "adverb", "t": "really; (true)", "cat": "Adverb", "ex": ["Zhè ge zhēn hǎochī!", "This is really delicious!"], "level": "New HSK1 Words"}, {"n": 286, "w": "正在", "p": "zhèngzài", "pos": "adverb", "t": "in the process of", "cat": "Adverb", "ex": ["Wǒ zhèngzài chī fàn.", "I am eating right now."], "note": "Placed before a verb to show an action is happening right now, often paired with 呢 at the end.", "level": "New HSK1 Words"}, {"n": 287, "w": "只", "p": "zhī", "pos": "classifier", "t": "measure word for animals, one of a pair", "cat": "Measure Word", "ex": ["Wǒ jiā yǒu yì zhī māo.", "My family has a cat."], "level": "New HSK1 Words"}, {"n": 288, "w": "知道", "p": "zhīdào", "pos": "verb", "t": "to know", "cat": "Verb / Action", "ex": ["Wǒ bù zhīdào tā de míngzi.", "I don't know his name."], "level": "New HSK1 Words"}, {"n": 289, "w": "中国", "p": "Zhōngguó", "pos": "noun", "t": "China", "cat": "Places", "ex": ["Wǒ qù guò Zhōngguó.", "I've been to China."], "level": "Old HSK1 Words"}, {"n": 290, "w": "中文", "p": "Zhōngwén", "pos": "noun", "t": "Chinese language", "cat": "Noun / Thing", "ex": ["Wǒ zài xué Zhōngwén.", "I'm learning Chinese."], "level": "New HSK1 Words"}, {"n": 291, "w": "中午", "p": "zhōngwǔ", "pos": "noun", "t": "noon", "cat": "Time", "ex": ["Wǒ zhōngwǔ chī fàn.", "I eat at noon."], "level": "Old HSK1 Words"}, {"n": 292, "w": "中学", "p": "zhōngxué", "pos": "noun", "t": "middle school", "cat": "Places", "ex": ["Wǒ dìdi shàng zhōngxué.", "My younger brother attends middle school."], "level": "New HSK1 Words"}, {"n": 293, "w": "中学生", "p": "zhōngxuéshēng", "pos": "noun", "t": "middle school student", "cat": "Family & People", "ex": ["Tā shì zhōngxuéshēng.", "He is a middle school student."], "level": "New HSK1 Words"}, {"n": 294, "w": "住", "p": "zhù", "pos": "verb", "t": "to live, to reside", "cat": "Verb / Action", "ex": ["Wǒ zhù zài Běijīng.", "I live in Beijing."], "level": "Old HSK1 Words"}, {"n": 295, "w": "桌子", "p": "zhuōzi", "pos": "noun", "t": "table, desk", "cat": "Objects & Tech", "ex": ["Shū zài zhuōzi shàng.", "The book is on the table."], "level": "Old HSK1 Words", "mw": "张"}, {"n": 296, "w": "字", "p": "zì", "pos": "noun", "t": "character, script", "cat": "Noun / Thing", "ex": ["Zhè ge zì hěn nán xiě.", "This character is hard to write."], "level": "Old HSK1 Words", "mw": "个"}, {"n": 297, "w": "昨天", "p": "zuótiān", "pos": "noun", "t": "yesterday", "cat": "Time", "ex": ["Zuótiān wǒ hěn máng.", "Yesterday I was very busy."], "level": "Old HSK1 Words"}, {"n": 298, "w": "坐", "p": "zuò", "pos": "verb", "t": "to sit", "cat": "Verb / Action", "ex": ["Qǐng zuò.", "Please sit."], "level": "Old HSK1 Words"}, {"n": 299, "w": "做", "p": "zuò", "pos": "verb", "t": "to do, to make", "cat": "Verb / Action", "ex": ["Nǐ zài zuò shénme?", "What are you doing?"], "level": "Old HSK1 Words"}, {"n": 300, "w": "做饭", "p": "zuò fàn", "pos": "verb", "t": "to cook", "cat": "Food & Drink", "ex": ["Wǒ māma huì zuò fàn.", "My mom knows how to cook."], "level": "New HSK1 Words"}, {"n": 301, "w": "酸", "p": "suān", "pos": "adjective", "t": "sour", "cat": "Food & Drink", "ex": ["Zhè ge shuǐguǒ hěn suān.", "This fruit is very sour."], "level": "Other Words"}, {"n": 302, "w": "可能", "p": "kěnéng", "pos": "adverb", "t": "maybe, possibly", "cat": "Adverb", "ex": ["Míngtiān kěnéng xià yǔ.", "It might rain tomorrow."], "level": "Other Words"}, {"n": 303, "w": "每次", "p": "měicì", "pos": "phrase", "t": "every time", "cat": "Phrase", "ex": ["Wǒ měicì dōu hěn gāoxìng.", "I'm happy every time."], "level": "Other Words"}, {"n": 304, "w": "到处", "p": "dàochù", "pos": "adverb", "t": "everywhere, here and there", "cat": "Places", "ex": ["Dàochù dōu shì rén.", "There are people everywhere."], "level": "Other Words"}, {"n": 305, "w": "结果", "p": "jiéguǒ", "pos": "noun", "t": "result; as a result", "cat": "Noun / Thing", "ex": ["Jiéguǒ wǒmen dōu hěn gāoxìng.", "As a result, we were all happy."], "level": "Other Words"}, {"n": 306, "w": "借过", "p": "jièguò", "pos": "phrase", "t": "excuse me (let me pass by)", "cat": "Greetings & Phrases", "ex": ["Bùhǎoyìsi, jièguò yíxià.", "Excuse me, let me pass."], "level": "Other Words"}, {"n": 307, "w": "拍照", "p": "pāizhào", "pos": "verb", "t": "to take photos", "cat": "Verb / Action", "ex": ["Wǒmen lái pāizhào ba.", "Let's take a photo."], "level": "Other Words"}, {"w": "这家", "p": "zhè jiā", "pos": "phrase", "t": "this place (shop/restaurant/business)", "cat": "Places", "n": 308, "ex": ["Zhè jiā fàndiàn hěn hǎochī.", "This restaurant is delicious."], "level": "Other Words"}, {"w": "游泳", "p": "yóuyǒng", "pos": "verb", "t": "to swim; swimming", "cat": "Verb / Action", "n": 309, "ex": ["Wǒ zhōumò qù yóuyǒng.", "I go swimming on weekends."], "level": "Other Words"}, {"w": "太赞了", "p": "tài zàn le", "pos": "phrase", "t": "awesome!, that's great!", "cat": "Slang", "n": 310, "ex": ["Zhè ge zhǔyi tài zàn le!", "This idea is awesome!"], "level": "Other Words"}];
+
+// ---------- storage (persistent) ----------
+let known = new Set();
+let missed = new Set();
+async function loadKnown(){
+  try{
+    const r = await window.storage.get('known-words');
+    if(r && r.value){ known = new Set(JSON.parse(r.value)); }
+  }catch(e){}
+  try{
+    const m = await window.storage.get('missed-words');
+    if(m && m.value){ missed = new Set(JSON.parse(m.value)); }
+  }catch(e){}
+  updateKnownCount();
+}
+async function saveKnown(){
+  try{ await window.storage.set('known-words', JSON.stringify([...known])); }catch(e){}
+}
+async function saveMissed(){
+  try{ await window.storage.set('missed-words', JSON.stringify([...missed])); }catch(e){}
+}
+function markMissed(n){
+  missed.add(n);
+  saveMissed();
+}
+function markGotRight(n){
+  if(missed.has(n)){ missed.delete(n); saveMissed(); }
+}
+function updateKnownCount(){
+  document.getElementById('knownCount').textContent = known.size;
+  document.getElementById('missedCount').textContent = missed.size;
+}
+loadKnown();
+
+// ---------- deck filtering ----------
+function getDeck(){
+  const v = document.getElementById('deckSelect').value;
+  if(v === 'all') return VOCAB;
+  if(v === 'new') return VOCAB.filter(w => !known.has(w.n));
+  if(v === 'missed') return VOCAB.filter(w => missed.has(w.n));
+  if(v === 'words') return VOCAB.filter(w => w.pos !== 'phrase');
+  if(v === 'phrases') return VOCAB.filter(w => w.pos === 'phrase');
+  if(v === 'hsk-old') return VOCAB.filter(w => w.level === 'Old HSK1 Words');
+  if(v === 'hsk-new') return VOCAB.filter(w => w.level === 'New HSK1 Words');
+  if(v === 'hsk-other') return VOCAB.filter(w => w.level === 'Other Words');
+  if(v === 'slang') return VOCAB.filter(w => w.cat === 'Slang');
+  return VOCAB;
+}
+
+// ---------- tabs ----------
+const tabs = document.querySelectorAll('.tab');
+tabs.forEach(t => t.addEventListener('click', () => {
+  tabs.forEach(x=>x.classList.remove('active'));
+  t.classList.add('active');
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('panel-'+t.dataset.panel).classList.add('active');
+  if(t.dataset.panel === 'quiz') newQuizQuestion();
+  if(t.dataset.panel === 'match') newMatchRound();
+  if(t.dataset.panel === 'type') newTypeQuestion();
+  if(t.dataset.panel === 'sentence') newSentenceQuestion();
+  if(t.dataset.panel === 'mw') newMwQuestion();
+  if(t.dataset.panel === 'patterns') renderPatterns();
+}));
+
+document.getElementById('deckSelect').addEventListener('change', () => {
+  flashIndex = 0;
+  loadFlashDeck();
+  newQuizQuestion();
+  newMatchRound();
+  newTypeQuestion();
+  newSentenceQuestion();
+  newMwQuestion();
+});
+
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+// ---------- FLASHCARDS ----------
+let flashDeck = [];
+let flashIndex = 0;
+function loadFlashDeck(){
+  flashDeck = shuffle(getDeck());
+  flashIndex = 0;
+  renderFlash();
+}
+function renderFlash(){
+  const card = document.getElementById('card');
+  card.classList.remove('flipped');
+  if(flashDeck.length === 0){
+    document.getElementById('fHanzi').textContent = '🎉';
+    document.getElementById('bHanzi').textContent = '';
+    document.getElementById('bPinyin').textContent = '';
+    document.getElementById('bTrans').textContent = 'Deck empty — pick another';
+    document.getElementById('bPos').textContent = '';
+    document.getElementById('flashProgress').style.width = '0%';
+    return;
+  }
+  const w = flashDeck[flashIndex];
+  document.getElementById('fHanzi').textContent = w.w;
+  document.getElementById('bHanzi').textContent = w.w;
+  document.getElementById('bPinyin').textContent = w.p;
+  document.getElementById('bTrans').textContent = w.t;
+  document.getElementById('bPos').textContent = w.pos;
+  document.getElementById('flashProgress').style.width = ((flashIndex+1)/flashDeck.length*100)+'%';
+}
+document.getElementById('card').addEventListener('click', () => {
+  document.getElementById('card').classList.toggle('flipped');
+});
+document.getElementById('nextCard').addEventListener('click', () => {
+  if(flashDeck.length===0) return;
+  flashIndex = (flashIndex+1) % flashDeck.length;
+  renderFlash();
+});
+document.getElementById('prevCard').addEventListener('click', () => {
+  if(flashDeck.length===0) return;
+  flashIndex = (flashIndex-1+flashDeck.length) % flashDeck.length;
+  renderFlash();
+});
+document.getElementById('know').addEventListener('click', () => {
+  if(flashDeck.length===0) return;
+  known.add(flashDeck[flashIndex].n);
+  markGotRight(flashDeck[flashIndex].n);
+  updateKnownCount(); saveKnown();
+  advanceFlashRemove();
+});
+document.getElementById('dontKnow').addEventListener('click', () => {
+  if(flashDeck.length===0) return;
+  known.delete(flashDeck[flashIndex].n);
+  markMissed(flashDeck[flashIndex].n);
+  updateKnownCount(); saveKnown();
+  flashIndex = (flashIndex+1) % flashDeck.length;
+  renderFlash();
+});
+function advanceFlashRemove(){
+  flashDeck.splice(flashIndex,1);
+  if(flashIndex >= flashDeck.length) flashIndex = 0;
+  renderFlash();
+}
+loadFlashDeck();
+
+// ---------- QUIZ ----------
+let streak = 0;
+let quizAnswered = false;
+function newQuizQuestion(){
+  quizAnswered = false;
+  document.getElementById('quizExplain').classList.remove('show');
+  document.getElementById('quizExplain').innerHTML = '';
+  document.getElementById('quizNextRow').style.display = 'none';
+  const deck = getDeck();
+  if(deck.length < 4){
+    document.getElementById('qHanzi').textContent = '—';
+    document.getElementById('qPinyin').textContent = '';
+    document.getElementById('qOptions').innerHTML = '<div class="empty">Need at least 4 words in this deck</div>';
+    return;
+  }
+  const pool = shuffle(deck);
+  const correct = pool[0];
+  const distractors = pool.slice(1,4);
+  const options = shuffle([correct, ...distractors]);
+
+  document.getElementById('qHanzi').textContent = correct.w;
+  document.getElementById('qPinyin').textContent = correct.p;
+
+  const optDiv = document.getElementById('qOptions');
+  optDiv.innerHTML = '';
+  options.forEach(o => {
+    const btn = document.createElement('button');
+    btn.className = 'opt';
+    btn.textContent = o.t;
+    btn.addEventListener('click', () => {
+      if(quizAnswered) return;
+      quizAnswered = true;
+      const allOpts = optDiv.querySelectorAll('.opt');
+      allOpts.forEach(b => b.classList.add('dim'));
+      if(o.n === correct.n){
+        btn.classList.remove('dim');
+        btn.classList.add('correct');
+        streak++;
+        known.add(correct.n);
+        markGotRight(correct.n);
+        updateKnownCount(); saveKnown();
+        document.getElementById('streakNum').textContent = streak;
+        setTimeout(newQuizQuestion, 900);
+      } else {
+        btn.classList.remove('dim');
+        btn.classList.add('wrong');
+        allOpts.forEach(b => {
+          if(b.textContent === correct.t){ b.classList.remove('dim'); b.classList.add('correct'); }
+        });
+        streak = 0;
+        markMissed(correct.n);
+        document.getElementById('streakNum').textContent = streak;
+        showQuizExplanation(correct);
+        document.getElementById('quizNextRow').style.display = 'flex';
+      }
+    });
+    optDiv.appendChild(btn);
+  });
+}
+
+function showQuizExplanation(w){
+  const box = document.getElementById('quizExplain');
+  let html = '<div class="exlabel">How ' + w.w + ' (' + w.p + ') is used</div>';
+  if(w.note){
+    html += '<div class="extrans" style="margin-bottom:8px;">' + w.note + '</div>';
+  }
+  if(w.ex){
+    html += '<div class="expinyin">' + w.w + ' — ' + w.ex[0] + '</div>';
+    html += '<div class="extrans">' + w.ex[1] + '</div>';
+  } else if(!w.note){
+    html += '<div class="extrans">' + w.w + ' (' + w.p + ') means "' + w.t + '".</div>';
+  }
+  box.innerHTML = html;
+  box.classList.add('show');
+}
+
+document.getElementById('quizNextBtn').addEventListener('click', newQuizQuestion);
+
+// ---------- MATCH ----------
+let matchState = { hanziSel:null, transSel:null, matched:0, total:0 };
+function newMatchRound(){
+  const deck = shuffle(getDeck()).slice(0,6);
+  matchState = { hanziSel:null, transSel:null, matched:0, total:deck.length, items:deck };
+  document.getElementById('matchScore').textContent = '';
+  document.getElementById('matchStatus').textContent = 'Match each character to its meaning';
+  const grid = document.getElementById('matchGrid');
+  grid.innerHTML = '';
+  if(deck.length === 0){
+    grid.innerHTML = '<div class="empty">Not enough words in this deck</div>';
+    return;
+  }
+  const hanziTiles = shuffle(deck);
+  const transTiles = shuffle(deck);
+  hanziTiles.forEach(w => {
+    const el = document.createElement('button');
+    el.className = 'mtile'; el.dataset.n = w.n; el.dataset.side='h';
+    el.innerHTML = '<div class="h">'+w.w+'</div>';
+    el.addEventListener('click', () => matchClick(el, w, 'h'));
+    grid.appendChild(el);
+  });
+  transTiles.forEach(w => {
+    const el = document.createElement('button');
+    el.className = 'mtile'; el.dataset.n = w.n; el.dataset.side='t';
+    el.innerHTML = '<div class="t">'+w.t+'</div>';
+    el.addEventListener('click', () => matchClick(el, w, 't'));
+    grid.appendChild(el);
+  });
+}
+function matchClick(el, w, side){
+  if(el.classList.contains('done')) return;
+  if(side === 'h'){
+    if(matchState.hanziSel) matchState.hanziSel.el.classList.remove('sel');
+    matchState.hanziSel = {el, w};
+    el.classList.add('sel');
+  } else {
+    if(matchState.transSel) matchState.transSel.el.classList.remove('sel');
+    matchState.transSel = {el, w};
+    el.classList.add('sel');
+  }
+  if(matchState.hanziSel && matchState.transSel){
+    const a = matchState.hanziSel, b = matchState.transSel;
+    if(a.w.n === b.w.n){
+      a.el.classList.remove('sel'); b.el.classList.remove('sel');
+      a.el.classList.add('done'); b.el.classList.add('done');
+      matchState.matched++;
+      known.add(a.w.n); updateKnownCount(); saveKnown();
+      document.getElementById('matchScore').textContent = matchState.matched+'/'+matchState.total;
+      if(matchState.matched === matchState.total){
+        document.getElementById('matchStatus').textContent = 'Round complete! 🎉';
+        setTimeout(newMatchRound, 1100);
+      }
+      matchState.hanziSel = null; matchState.transSel = null;
+    } else {
+      a.el.classList.add('bad'); b.el.classList.add('bad');
+      markMissed(a.w.n);
+      setTimeout(() => {
+        a.el.classList.remove('sel','bad'); b.el.classList.remove('sel','bad');
+      }, 450);
+      matchState.hanziSel = null; matchState.transSel = null;
+    }
+  }
+}
+
+// ---------- TYPE ----------
+let typeStreak = 0;
+let typeCurrent = null;
+let typeChecked = false;
+
+function stripTones(s){
+  return s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
+}
+
+function newTypeQuestion(){
+  const deck = getDeck();
+  const hintEl = document.getElementById('typeCatHint');
+  hintEl.classList.remove('show');
+  hintEl.textContent = '';
+  if(deck.length === 0){
+    document.getElementById('tHanzi').textContent = '—';
+    document.getElementById('typeFeedback').textContent = 'No words in this deck';
+    typeCurrent = null;
+    return;
+  }
+  typeChecked = false;
+  typeCurrent = shuffle(deck)[0];
+  document.getElementById('tHanzi').textContent = typeCurrent.w;
+  const input = document.getElementById('typeInput');
+  input.value = '';
+  input.classList.remove('correct','wrong');
+  input.disabled = false;
+  document.getElementById('typeFeedback').innerHTML = '&nbsp;';
+  document.getElementById('typeSubmit').textContent = 'Check';
+  setTimeout(() => input.focus(), 50);
+}
+
+document.getElementById('typeHintBtn').addEventListener('click', () => {
+  if(!typeCurrent) return;
+  const hintEl = document.getElementById('typeCatHint');
+  hintEl.textContent = 'Category: ' + typeCurrent.cat;
+  hintEl.classList.add('show');
+});
+
+function checkTypeAnswer(){
+  if(!typeCurrent) return;
+  if(typeChecked){ newTypeQuestion(); return; }
+  typeChecked = true;
+  const input = document.getElementById('typeInput');
+  const given = stripTones(input.value);
+  const target = stripTones(typeCurrent.p);
+  const ok = given.length > 0 && given === target;
+
+  if(ok){
+    input.classList.add('correct');
+    typeStreak++;
+    known.add(typeCurrent.n);
+    markGotRight(typeCurrent.n);
+    updateKnownCount(); saveKnown();
+    document.getElementById('typeFeedback').innerHTML = 'Correct — <b>'+typeCurrent.t+'</b>';
+  } else {
+    input.classList.add('wrong');
+    typeStreak = 0;
+    markMissed(typeCurrent.n);
+    document.getElementById('typeFeedback').innerHTML = 'Answer: <b>'+typeCurrent.p+'</b> — '+typeCurrent.t;
+  }
+  document.getElementById('typeStreakNum').textContent = typeStreak;
+  input.disabled = true;
+  document.getElementById('typeSubmit').textContent = 'Next →';
+}
+
+document.getElementById('typeSubmit').addEventListener('click', checkTypeAnswer);
+document.getElementById('typeInput').addEventListener('keydown', (e) => {
+  if(e.key === 'Enter') checkTypeAnswer();
+});
+
+// ---------- SENTENCE ----------
+let sentenceCurrent = null;
+
+function newSentenceQuestion(){
+  const deck = getDeck();
+  const exampleBox = document.getElementById('exampleBox');
+  exampleBox.classList.remove('show');
+  exampleBox.innerHTML = '';
+  document.getElementById('sentenceSelfRow').style.display = 'none';
+  document.getElementById('sentenceInput').value = '';
+
+  if(deck.length === 0){
+    document.getElementById('sHanzi').textContent = '—';
+    document.getElementById('sPinyin').textContent = '';
+    document.getElementById('sTrans').textContent = 'No words in this deck';
+    sentenceCurrent = null;
+    return;
+  }
+  sentenceCurrent = shuffle(deck)[0];
+  document.getElementById('sHanzi').textContent = sentenceCurrent.w;
+  document.getElementById('sPinyin').textContent = sentenceCurrent.p;
+  document.getElementById('sTrans').textContent = sentenceCurrent.t;
+  setTimeout(() => document.getElementById('sentenceInput').focus(), 50);
+}
+
+document.getElementById('showExampleBtn').addEventListener('click', () => {
+  if(!sentenceCurrent) return;
+  const box = document.getElementById('exampleBox');
+  if(sentenceCurrent.ex){
+    box.innerHTML =
+      '<div class="exlabel">Example sentence</div>' +
+      '<div class="expinyin">' + sentenceCurrent.ex[0] + '</div>' +
+      '<div class="extrans">' + sentenceCurrent.ex[1] + '</div>';
+  } else {
+    box.innerHTML =
+      '<div class="exlabel">No example yet</div>' +
+      '<div class="extrans">Just make sure your sentence uses "' + sentenceCurrent.w + '" (' + sentenceCurrent.p + ') correctly — check the meaning above.</div>';
+  }
+  box.classList.add('show');
+  document.getElementById('sentenceSelfRow').style.display = 'flex';
+});
+
+document.getElementById('sentenceEasy').addEventListener('click', () => {
+  if(!sentenceCurrent) return;
+  known.add(sentenceCurrent.n);
+  markGotRight(sentenceCurrent.n);
+  updateKnownCount(); saveKnown();
+  newSentenceQuestion();
+});
+document.getElementById('sentenceHard').addEventListener('click', () => {
+  if(!sentenceCurrent) return;
+  markMissed(sentenceCurrent.n);
+  updateKnownCount();
+  newSentenceQuestion();
+});
+document.getElementById('sentenceNextBtn').addEventListener('click', newSentenceQuestion);
+
+// ---------- AI-powered sentence check ----------
+async function callClaude(messages, system, maxTokens){
+  const body = { model: "claude-sonnet-4-6", max_tokens: maxTokens || 1000, messages };
+  if(system) body.system = system;
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body)
+  });
+  const data = await res.json();
+  const textBlocks = (data.content || []).filter(b => b.type === 'text').map(b => b.text);
+  return textBlocks.join('\n');
+}
+
+document.getElementById('checkAiBtn').addEventListener('click', async () => {
+  if(!sentenceCurrent) return;
+  const input = document.getElementById('sentenceInput').value.trim();
+  const box = document.getElementById('aiCheckBox');
+  if(!input){
+    box.innerHTML = '<div class="exlabel">Write something first</div><div class="extrans">Type a pinyin sentence using ' + sentenceCurrent.w + ' before checking.</div>';
+    box.classList.add('show');
+    return;
+  }
+  box.innerHTML = '<div class="exlabel">Checking…</div>';
+  box.classList.add('show');
+  try{
+    const system = "You are a friendly, concise Mandarin Chinese tutor for an HSK1-level beginner learner. The learner will give you a target word/phrase and a sentence they wrote in pinyin, attempting to use that word correctly. Respond in this exact plain-text format with no markdown symbols:\nCORRECT: yes or no\nFEEDBACK: one short encouraging sentence explaining what's right or wrong (in English)\nFIX: if there was a mistake, give a corrected version as 'Hanzi (Pinyin) — English translation'. If it was already correct, write 'N/A'.\nKeep it brief — 2-4 short lines total.";
+    const userMsg = "Target word: " + sentenceCurrent.w + " (" + sentenceCurrent.p + ", meaning: " + sentenceCurrent.t + ")\nMy sentence (pinyin): " + input;
+    const reply = await callClaude([{role:"user", content: userMsg}], system);
+    const correctMatch = /CORRECT:\s*(yes|no)/i.exec(reply);
+    const isCorrect = correctMatch && correctMatch[1].toLowerCase() === 'yes';
+    const feedbackMatch = /FEEDBACK:\s*(.+)/i.exec(reply);
+    const fixMatch = /FIX:\s*(.+)/i.exec(reply);
+    let html = '<div class="exlabel">' + (isCorrect ? '✅ Correct!' : '✏️ Needs a fix') + '</div>';
+    if(feedbackMatch) html += '<div class="extrans" style="margin-bottom:6px;">' + feedbackMatch[1] + '</div>';
+    if(fixMatch && !/n\/a/i.test(fixMatch[1])) html += '<div class="expinyin">' + fixMatch[1] + '</div>';
+    box.innerHTML = html;
+    if(isCorrect){
+      known.add(sentenceCurrent.n); markGotRight(sentenceCurrent.n);
+    } else {
+      markMissed(sentenceCurrent.n);
+    }
+    updateKnownCount(); saveKnown();
+  } catch(e){
+    box.innerHTML = '<div class="exlabel">Couldn\'t reach the checker</div><div class="extrans">Try again in a moment, or use "Show example" instead.</div>';
+  }
+});
+
+// ---------- MEASURE WORDS ----------
+const MW_MEANING = {
+ "本":"books, magazines, notebooks",
+ "只":"animals (and one of a pair)",
+ "辆":"vehicles (cars, bikes)",
+ "架":"aircraft, machines",
+ "件":"clothing, matters, items",
+ "把":"objects with a handle (chairs, umbrellas, knives)",
+ "张":"flat objects (tables, paper, tickets)",
+ "台":"machines/appliances (computers, TVs)",
+ "部":"phones, films, vehicles (formal)",
+ "家":"businesses (shops, restaurants, companies)",
+ "所":"schools, hospitals, institutions",
+ "间":"rooms",
+ "个":"general — the all-purpose classifier",
+ "位":"people (polite/respectful)",
+ "碗":"bowls of food",
+ "杯":"cups/glasses of a drink",
+ "首":"songs, poems",
+ "节":"class periods, lessons",
+};
+const ALL_MW = Object.keys(MW_MEANING);
+let mwStreak = 0;
+let mwAnswered = false;
+
+function getMwDeck(){
+  const base = getDeck().filter(w => w.mw);
+  if(base.length >= 4) return base;
+  return VOCAB.filter(w => w.mw);
+}
+
+function newMwQuestion(){
+  mwAnswered = false;
+  document.getElementById('mwExplain').classList.remove('show');
+  document.getElementById('mwExplain').innerHTML = '';
+  document.getElementById('mwNextRow').style.display = 'none';
+  const deck = getMwDeck();
+  if(deck.length === 0){
+    document.getElementById('mwHanzi').textContent = '—';
+    document.getElementById('mwOptions').innerHTML = '<div class="empty">No measure-word data in this deck</div>';
+    return;
+  }
+  const word = shuffle(deck)[0];
+  document.getElementById('mwHanzi').textContent = word.w;
+  document.getElementById('mwPinyin').textContent = word.p;
+  document.getElementById('mwTrans').textContent = word.t;
+
+  const distractorPool = ALL_MW.filter(mw => mw !== word.mw);
+  const distractors = shuffle(distractorPool).slice(0,3);
+  const options = shuffle([word.mw, ...distractors]);
+
+  const optDiv = document.getElementById('mwOptions');
+  optDiv.innerHTML = '';
+  options.forEach(mw => {
+    const btn = document.createElement('button');
+    btn.className = 'opt';
+    btn.textContent = mw;
+    btn.addEventListener('click', () => {
+      if(mwAnswered) return;
+      mwAnswered = true;
+      const allOpts = optDiv.querySelectorAll('.opt');
+      allOpts.forEach(b => b.classList.add('dim'));
+      if(mw === word.mw){
+        btn.classList.remove('dim'); btn.classList.add('correct');
+        mwStreak++;
+        known.add(word.n); markGotRight(word.n);
+        updateKnownCount(); saveKnown();
+        document.getElementById('mwStreakNum').textContent = mwStreak;
+        setTimeout(newMwQuestion, 900);
+      } else {
+        btn.classList.remove('dim'); btn.classList.add('wrong');
+        allOpts.forEach(b => { if(b.textContent === word.mw){ b.classList.remove('dim'); b.classList.add('correct'); } });
+        mwStreak = 0;
+        markMissed(word.n);
+        document.getElementById('mwStreakNum').textContent = mwStreak;
+        const box = document.getElementById('mwExplain');
+        box.innerHTML = '<div class="exlabel">' + word.mw + ' — ' + (MW_MEANING[word.mw]||'') + '</div>' +
+          '<div class="extrans">e.g. 一' + word.mw + word.w + ' (yī ' + word.mw + ' ' + word.p.split(' ')[0] + ')</div>';
+        box.classList.add('show');
+        document.getElementById('mwNextRow').style.display = 'flex';
+      }
+    });
+    optDiv.appendChild(btn);
+  });
+}
+document.getElementById('mwNextBtn').addEventListener('click', newMwQuestion);
+
+// ---------- SENTENCE PATTERNS ----------
+const PATTERNS = [
+ {name:"Basic statement", struct:"Subject + 是 + Noun", ex:"Wǒ shì xuéshēng.", en:"I am a student."},
+ {name:"Yes/No question", struct:"Statement + 吗？", ex:"Nǐ shì xuéshēng ma?", en:"Are you a student?"},
+ {name:"Adjective sentence (no 是!)", struct:"Subject + 很 + Adjective", ex:"Wǒ hěn gāoxìng.", en:"I am happy. (很 is required, not 'to be')"},
+ {name:"Have / possess", struct:"Subject + 有 + Noun", ex:"Wǒ yǒu yì zhī gǒu.", en:"I have a dog."},
+ {name:"Negation", struct:"不 / 没有 + Verb", ex:"Wǒ bù xǐhuan kāfēi. / Wǒ méiyǒu qián.", en:"I don't like coffee. / I don't have money."},
+ {name:"Verb + Object + 吧 (suggestion)", struct:"Verb Phrase + 吧", ex:"Wǒmen qù chī fàn ba.", en:"Let's go eat, shall we."},
+ {name:"Too / extremely", struct:"太 + Adjective + 了", ex:"Zhè ge tài guì le.", en:"This is too expensive."},
+ {name:"Time + Place + Verb", struct:"Time + Place + Verb", ex:"Wǒ míngtiān zài jiā xiūxi.", en:"I'll rest at home tomorrow."},
+ {name:"Completed action", struct:"Verb + 了", ex:"Wǒ chī fàn le.", en:"I have eaten."},
+ {name:"Progressive action", struct:"正在 + Verb + 呢", ex:"Wǒ zhèngzài chī fàn ne.", en:"I am eating right now."},
+ {name:"Asking 'how many/much'", struct:"几 / 多少 + Classifier + Noun", ex:"Nǐ jiā yǒu jǐ ge rén?", en:"How many people are in your family?"},
+ {name:"Comparison", struct:"A + 比 + B + Adjective", ex:"Zhè ge bǐ nà ge guì.", en:"This one is more expensive than that one."},
+ {name:"Ability / permission", struct:"Subject + 会/能/可以 + Verb", ex:"Wǒ huì shuō Hànyǔ.", en:"I can speak Chinese."},
+ {name:"Want to do something", struct:"Subject + 想/要 + Verb", ex:"Wǒ xiǎng qù Zhōngguó.", en:"I want to go to China."},
+ {name:"Question word 什么/哪儿/谁", struct:"Same word order as a statement, swap in the question word", ex:"Nǐ qù nǎr?", en:"Where are you going?"},
+];
+
+function renderPatterns(){
+  const el = document.getElementById('patternsList');
+  if(el.dataset.rendered) return;
+  el.dataset.rendered = '1';
+  el.innerHTML = PATTERNS.map(p =>
+    '<div class="patterncard">' +
+      '<div class="pname">' + p.name + '</div>' +
+      '<div class="pstruct">' + p.struct + '</div>' +
+      '<div class="pex">' + p.ex + '</div>' +
+      '<div class="pen">' + p.en + '</div>' +
+    '</div>'
+  ).join('');
+}
+
+// ---------- CHAT / ROLEPLAY ----------
+const SCENARIOS = [
+ {id:"restaurant", emoji:"🍜", name:"Restaurant", desc:"Order food from a waiter",
+  system:"You are role-playing as a friendly waiter/waitress at a casual Chinese restaurant, talking to a beginner (HSK1-level) Mandarin learner. Stay in character the whole time — never break the fourth wall or mention you are an AI. Speak mostly in simple Mandarin Chinese using basic HSK1-level vocabulary and short sentences. For EVERY line you say, format it as three lines: the Chinese characters, then the pinyin in parentheses, then the English translation in brackets — like this:\n你好，欢迎光临！\n(Nǐ hǎo, huānyíng guānglín!)\n[Hello, welcome!]\nIf the learner makes a Chinese grammar or word-choice mistake, gently note the correction in English in one short extra line before continuing the roleplay, then continue naturally. Keep each of your turns short (1-3 sentences). Start the conversation by greeting the customer and asking if they'd like a menu."},
+ {id:"taxi", emoji:"🚕", name:"Taxi", desc:"Tell the driver where to go",
+  system:"You are role-playing as a Chinese taxi driver picking up a passenger, talking to a beginner (HSK1-level) Mandarin learner. Stay in character, never break the fourth wall. Speak mostly in simple Mandarin using basic HSK1-level vocabulary. Format every line as: Chinese characters, then pinyin in parentheses on the next line, then English translation in brackets on the next line. Gently correct any mistakes the learner makes in one short English line before continuing. Keep turns short. Start by greeting the passenger and asking where they want to go."},
+ {id:"shop", emoji:"🛍️", name:"Shopping", desc:"Buy clothes or fruit at a shop",
+  system:"You are role-playing as a friendly shopkeeper in a small Chinese shop (clothes or fruit, your choice), talking to a beginner (HSK1-level) Mandarin learner. Stay in character. Speak mostly in simple Mandarin using basic HSK1-level vocabulary. Format every line as: Chinese characters, then pinyin in parentheses, then English translation in brackets, each on its own line. Gently correct mistakes in one short English line before continuing. Keep turns short. Start by greeting the customer and asking what they're looking for."},
+ {id:"friend", emoji:"👋", name:"New Friend", desc:"Casual small talk",
+  system:"You are role-playing as a friendly Chinese person meeting the learner for the first time at a casual social event, talking to a beginner (HSK1-level) Mandarin learner. Stay in character. Speak mostly in simple Mandarin using basic HSK1-level vocabulary — ask about their name, where they're from, hobbies, etc. Format every line as: Chinese characters, then pinyin in parentheses, then English translation in brackets, each on its own line. Gently correct mistakes in one short English line before continuing. Keep turns short. Start with a friendly greeting."},
+];
+
+const CHAT_RULES = "\n\nCRITICAL RULES: Output ONLY your own single next line of dialogue as the character — just ONE conversational turn (1-3 short sentences), formatted as described above. Do NOT write the learner's reply. Do NOT simulate both sides of the conversation. Do NOT continue the story beyond your one turn. Stop immediately after your one turn and wait for the learner's real reply.";
+
+let chatHistory = [];
+let chatSystem = "";
+let chatSending = false;
+
+function renderScenarios(){
+  const grid = document.getElementById('scenarioGrid');
+  if(grid.dataset.rendered) return;
+  grid.dataset.rendered = '1';
+  grid.innerHTML = SCENARIOS.map(s =>
+    '<button class="scenariocard" data-id="' + s.id + '">' +
+      '<div class="emoji">' + s.emoji + '</div>' +
+      '<div class="name">' + s.name + '</div>' +
+      '<div class="desc">' + s.desc + '</div>' +
+    '</button>'
+  ).join('');
+  grid.querySelectorAll('.scenariocard').forEach(btn => {
+    btn.addEventListener('click', () => startScenario(btn.dataset.id));
+  });
+}
+renderScenarios();
+
+function addBubble(who, zh, py, en){
+  const wrap = document.getElementById('chatMessages');
+  const div = document.createElement('div');
+  div.className = 'bubble ' + (who === 'me' ? 'me' : 'them');
+  if(who === 'me'){
+    div.textContent = zh;
+  } else {
+    div.innerHTML =
+      (zh ? '<div class="zh">' + zh + '</div>' : '') +
+      (py ? '<div class="py">' + py + '</div>' : '') +
+      (en ? '<div class="en">' + en + '</div>' : '');
+  }
+  wrap.appendChild(div);
+  wrap.scrollTop = wrap.scrollHeight;
+  return div;
+}
+
+function parseCharacterReply(text){
+  // Splits AI reply into lines and groups zh/(pinyin)/[english] triples, keeps any stray correction lines as plain english bubbles interleaved
+  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+  const blocks = [];
+  let i = 0;
+  let dialogueBlocksSeen = 0;
+  while(i < lines.length){
+    const zhLine = lines[i];
+    const pyLine = lines[i+1] && /^\(.*\)$/.test(lines[i+1]) ? lines[i+1].replace(/^\(|\)$/g,'') : null;
+    const enLine = lines[i+2] && /^\[.*\]$/.test(lines[i+2]) ? lines[i+2].replace(/^\[|\]$/g,'') : null;
+    if(pyLine !== null && enLine !== null){
+      dialogueBlocksSeen++;
+      // Safety: only ever render ONE actual dialogue turn, even if the model
+      // over-generates a fake back-and-forth. Correction notes before it still show.
+      if(dialogueBlocksSeen > 1) break;
+      blocks.push({zh:zhLine, py:pyLine, en:enLine});
+      i += 3;
+    } else {
+      // stray line (e.g. a correction note, or a fake "learner:" line) — skip anything
+      // that looks like the model is speaking for the learner
+      if(/^(learner|you|user|学习者|你说)[:：]/i.test(zhLine)) break;
+      blocks.push({zh:null, py:null, en:zhLine});
+      i += 1;
+    }
+  }
+  return blocks;
+}
+
+async function startScenario(id){
+  const scenario = SCENARIOS.find(s => s.id === id);
+  if(!scenario) return;
+  chatSystem = scenario.system + CHAT_RULES;
+  chatHistory = [];
+  document.getElementById('chatScenarioPicker').style.display = 'none';
+  document.getElementById('chatWindow').style.display = 'block';
+  document.getElementById('chatScenarioName').textContent = scenario.emoji + ' ' + scenario.name;
+  document.getElementById('chatMessages').innerHTML = '';
+  const typing = addBubble('them','...'); typing.classList.add('typingdots'); typing.textContent = 'typing…';
+  try{
+    const reply = await callClaude([{role:"user", content:"(Begin the roleplay now. Remember: only ONE short turn from you.)"}], chatSystem, 220);
+    typing.remove();
+    chatHistory.push({role:"assistant", content: reply});
+    parseCharacterReply(reply).forEach(b => addBubble('them', b.zh, b.py, b.en));
+  } catch(e){
+    typing.remove();
+    addBubble('them', null, null, "Couldn't start the conversation — check your connection and try again.");
+  }
+}
+
+async function sendChatMessage(){
+  if(chatSending) return;
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if(!text) return;
+  chatSending = true;
+  addBubble('me', text);
+  input.value = '';
+  chatHistory.push({role:"user", content: text});
+  const typing = addBubble('them','...'); typing.classList.add('typingdots'); typing.textContent = 'typing…';
+  try{
+    const reply = await callClaude(chatHistory, chatSystem, 220);
+    typing.remove();
+    chatHistory.push({role:"assistant", content: reply});
+    parseCharacterReply(reply).forEach(b => addBubble('them', b.zh, b.py, b.en));
+  } catch(e){
+    typing.remove();
+    addBubble('them', null, null, "Message didn't send — try again.");
+  }
+  chatSending = false;
+}
+document.getElementById('chatSendBtn').addEventListener('click', sendChatMessage);
+document.getElementById('chatInput').addEventListener('keydown', (e) => { if(e.key === 'Enter') sendChatMessage(); });
+document.getElementById('chatEndBtn').addEventListener('click', () => {
+  document.getElementById('chatWindow').style.display = 'none';
+  document.getElementById('chatScenarioPicker').style.display = 'block';
+});
+
+newQuizQuestion();
+newMatchRound();
+newTypeQuestion();
+newSentenceQuestion();
+newMwQuestion();
+</script>
+</body>
+</html>
